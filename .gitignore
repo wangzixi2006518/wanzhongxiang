@@ -1,0 +1,8 @@
+**/target/
+.idea
+*.iml
+*.class
+*Test.java
+**/test/
+platform-server/src/main/resources/application-local.yml
+.m2/

@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: local
+  main:
+    allow-circular-references: true
+  datasource:
+    druid:
+      driver-class-name: ${wzx.datasource.driver-class-name}
+      url: jdbc:mysql://${wzx.datasource.host}:${wzx.datasource.port}/${wzx.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${wzx.datasource.username}
+      password: ${wzx.datasource.password}
+  redis:
+    host: ${wzx.redis.host}
+    port: ${wzx.redis.port}
+    password: ${wzx.redis.password}
+    database: ${wzx.redis.database}
+
+mybatis:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.wanzhongxiang.entity
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com:
+      wzx:
+        mapper: debug
+        service: info
+        controller: info
+
+wzx:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: ${WZX_JWT_ADMIN_SECRET_KEY:CHANGE_ME_ADMIN_JWT_SECRET}
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    admin-token-name: token
+    # 用户端
+    user-secret-key: ${WZX_JWT_USER_SECRET_KEY:CHANGE_ME_USER_JWT_SECRET}
+    user-ttl: 7200000
+    user-token-name: authentication
+  alioss:
+      endpoint: ${wzx.alioss.endpoint}
+      access-key-id: ${wzx.alioss.access-key-id}
+      access-key-secret: ${wzx.alioss.access-key-secret}
+      bucket-name: ${wzx.alioss.bucket-name}
+  wechat:
+    appid: ${wzx.wechat.appid}
+    secret: ${wzx.wechat.secret}
+    mchid: ${wzx.wechat.mchid}
+    mch-serial-no: ${wzx.wechat.mch-serial-no}
+    api-v3-key: ${wzx.wechat.api-v3-key}

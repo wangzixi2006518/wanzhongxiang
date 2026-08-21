@@ -1,0 +1,24 @@
+wzx:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: wanzhongxiang_platform
+    username: ${WZX_DATASOURCE_USERNAME:YOUR_USERNAME}
+    password: ${WZX_DATASOURCE_PASSWORD:YOUR_PASSWORD}
+  alioss:
+    endpoint: ${WZX_OSS_ENDPOINT:YOUR_OSS_ENDPOINT}
+    access-key-id: ${WZX_OSS_ACCESS_KEY_ID:YOUR_OSS_ACCESS_KEY_ID}
+    access-key-secret: ${WZX_OSS_ACCESS_KEY_SECRET:YOUR_OSS_ACCESS_KEY_SECRET}
+    bucket-name: ${WZX_OSS_BUCKET_NAME:YOUR_OSS_BUCKET_NAME}
+  redis:
+    host: localhost
+    port: 6379
+    password: ${WZX_REDIS_PASSWORD:YOUR_REDIS_PASSWORD}
+    database: 10
+  wechat:
+    appid: ${WZX_WECHAT_APPID:YOUR_WECHAT_APPID}
+    secret: ${WZX_WECHAT_SECRET:YOUR_WECHAT_SECRET}
+    mchid: ${WZX_WECHAT_MCHID:YOUR_WECHAT_MCHID}
+    mch-serial-no: ${WZX_WECHAT_MCH_SERIAL_NO:YOUR_WECHAT_MCH_SERIAL_NO}
+    api-v3-key: ${WZX_WECHAT_API_V3_KEY:YOUR_WECHAT_API_V3_KEY}
