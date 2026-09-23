@@ -5,7 +5,7 @@ import com.wanzhongxiang.vo.SalesTop10ReportVO;
 import com.wanzhongxiang.vo.TurnoverReportVO;
 import com.wanzhongxiang.vo.UserReportVO;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 
 public interface ReportService {

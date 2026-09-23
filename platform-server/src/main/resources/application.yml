@@ -12,11 +12,17 @@ spring:
       url: jdbc:mysql://${wzx.datasource.host}:${wzx.datasource.port}/${wzx.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${wzx.datasource.username}
       password: ${wzx.datasource.password}
-  redis:
-    host: ${wzx.redis.host}
-    port: ${wzx.redis.port}
-    password: ${wzx.redis.password}
-    database: ${wzx.redis.database}
+  data:
+    redis:
+      host: ${wzx.redis.host}
+      port: ${wzx.redis.port}
+      password: ${wzx.redis.password}
+      database: ${wzx.redis.database}
+  ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:none}
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
 
 mybatis:
   #mapper配置文件
