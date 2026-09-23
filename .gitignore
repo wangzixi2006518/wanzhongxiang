@@ -5,4 +5,5 @@
 *Test.java
 **/test/
 platform-server/src/main/resources/application-local.yml
+REAMDME.md
 .m2/
