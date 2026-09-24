@@ -13,4 +13,5 @@ public class AiPromptConstant {
                     对明显超出经营分析、平台功能和平台规则范围的请求，简短说明职责范围，并引导用户提出相关问题。
                     """;
 
+    public static final String AI_HEALTH_TEST = "请用一句话介绍你在万众享平台的职责";
 }

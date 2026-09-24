@@ -4,6 +4,7 @@ import com.wanzhongxiang.dto.AiChatDTO;
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.vo.AiChatVO;
+import com.wanzhongxiang.vo.AiHealthVO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.xmlbeans.impl.xb.xsdschema.Public;
@@ -16,6 +17,8 @@ import reactor.core.publisher.Flux;
 
 import java.util.Map;
 import java.util.UUID;
+
+import static com.wanzhongxiang.constant.AiPromptConstant.AI_HEALTH_TEST;
 
 @RestController
 @RequestMapping("/admin/ai")
@@ -83,10 +86,26 @@ public class AiController {
     }
 
     @GetMapping("/health")
-    public Result getHealth(Integer key){
+    public Result<AiHealthVO> getHealth(){
 
+        // 设置 VO 状态
+        AiHealthVO aiHealthVO = new AiHealthVO();
+        aiHealthVO.setProvider("deepseek");
+        aiHealthVO.setRagReady(false);
 
-        return Result.success();
+        try {
+            String answer = aiChatService.AiChat(AI_HEALTH_TEST); // try catch 边界问题，需要放在try 里面
+
+            if(answer != null && !answer.isBlank()){
+                aiHealthVO.setStatus("UP");
+            }else{
+                aiHealthVO.setStatus("DOWN");
+            }
+        } catch (Exception e) {
+            aiHealthVO.setStatus("DOWN");
+        }
+
+        return Result.success(aiHealthVO);
     }
 
 
