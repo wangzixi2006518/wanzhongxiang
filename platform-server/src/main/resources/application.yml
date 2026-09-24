@@ -63,3 +63,9 @@ wzx:
     mchid: ${wzx.wechat.mchid}
     mch-serial-no: ${wzx.wechat.mch-serial-no}
     api-v3-key: ${wzx.wechat.api-v3-key}
+  ai:
+    model:
+      chat: ${wzx.ai.model.chat}
+    deepseek:
+      api-key: ${wzx.ai.deepseek.api-key}
+
