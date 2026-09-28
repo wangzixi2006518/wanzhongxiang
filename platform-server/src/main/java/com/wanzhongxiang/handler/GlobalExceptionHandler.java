@@ -1,10 +1,13 @@
 package com.wanzhongxiang.handler;
 
 import com.wanzhongxiang.constant.MessageConstant;
+import com.wanzhongxiang.exception.AiConversationNotFoundException;
 import com.wanzhongxiang.exception.BaseException;
 import com.wanzhongxiang.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -43,6 +46,14 @@ public class GlobalExceptionHandler {
             // if 为 false 说明不知道报错原因
             return Result.error(MessageConstant.UNKNOWN_ERROR); // 未知错误
         }
+    }
+
+    // 为 AiConversationNotFoundException 增加返回 HTTP 404 的处理
+    @ExceptionHandler(AiConversationNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result exceptionHandler(AiConversationNotFoundException ex){
+        log.error("会话操作失败：{}", ex.getMessage());
+        return Result.error(ex.getMessage());
     }
 
 }
