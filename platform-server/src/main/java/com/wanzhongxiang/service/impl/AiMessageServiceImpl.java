@@ -42,6 +42,23 @@ public class AiMessageServiceImpl implements AiMessageService {
         return aiMessages;
     }
 
+    // 从数据库只读出完整轮次
+    @Override
+    public List<AiMessage> listTurnByConversationId(String conversationId, Long employeeId) {
+
+        // 检查当前会话归属
+        // 用会话 id + 当前登录管理员 id 一起查询，才能防止其他人拿到会话信息
+        AiConversation ownedById = aiConversationMapper.getOwnedById(conversationId, employeeId);
+        if(ownedById == null){
+            throw new AiConversationNotFoundException("会话不存在");
+        }
+
+        // 调用获取消息列表方法获得消息
+        List<AiMessage> aiMessages = aiMessageMapper.listTurnByConversationId(conversationId, employeeId);
+
+        return aiMessages;
+    }
+
     @Override
     @Transactional
     public AiConversation beginChat(Long employeeId, String requestedConversationId, String question, String assistantMessageId) {
@@ -60,6 +77,7 @@ public class AiMessageServiceImpl implements AiMessageService {
         aiMessageUser.setStatus("COMPLETED");
         aiMessageUser.setCreateTime(now);
         aiMessageUser.setUpdateTime(now);
+        aiMessageUser.setTurnId(assistantMessageId);
 
         // 助手行
         AiMessage aiMessageAssistant = new AiMessage();
@@ -70,6 +88,7 @@ public class AiMessageServiceImpl implements AiMessageService {
         aiMessageAssistant.setStatus("GENERATING");
         aiMessageAssistant.setCreateTime(now);
         aiMessageAssistant.setUpdateTime(now);
+        aiMessageAssistant.setTurnId(assistantMessageId);
 
         // 插入数据库
         // 用户

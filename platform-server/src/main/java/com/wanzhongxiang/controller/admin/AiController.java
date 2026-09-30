@@ -74,7 +74,7 @@ public class AiController {
         StringBuffer chunkBuffer = new StringBuffer();
 
         // 将 AiChatFlux 中的元素处理为 Flux<ServerSentEvent<Map<String, String>>>
-        Flux<ServerSentEvent<Map<String, String>>> map = aiChatService.AiChatFlux(aiChatDTO.getMessage()) // 取出用户的问题
+        Flux<ServerSentEvent<Map<String, String>>> map = aiChatService.AiChatFlux(aiChatDTO.getMessage(), aiConversation.getId(), currentId) // 取出用户的问题
                 // 模型源 Flux<String> 每收到一个 chunk 就追加到 StringBuffer（暂存到内存）
                 .doOnNext(chunk -> chunkBuffer.append(chunk))
                 // 每收到一个元素就转换一次，每个元素都是模型送来的一段文字，命名为 chunk
@@ -126,7 +126,7 @@ public class AiController {
                 // doOnComplete 处理正常结束，doOnError 处理模型报错
                 // 外层 doFinally则能观察包括 CANCEL 在内的终止原因，所以后续要在这里识别取消
                 .doFinally(signalType -> {
-                    log.info("messageId = {}, signalType = {}", messageId, signalType);
+                    log.info("conversationId = {}, messageId = {}, signalType = {}", aiConversation.getId(), messageId, signalType);
                     if(signalType == SignalType.CANCEL){
                         // 取一次内容快照，把 chunkBuffer 当前的内容复制成一个普通 String
                         String snapshot = chunkBuffer.toString();
@@ -222,7 +222,8 @@ public class AiController {
     @DeleteMapping("/conversations/{conversationId}")
     public Result deleteConversation(@PathVariable String conversationId){
         Long currentId = BaseContext.getCurrentId();
-        aiConversationService.deleteOwnedById(conversationId,currentId);
+        aiConversationService.deleteOwnedById(conversationId, currentId);
+        aiChatService.clearConversationMemory(conversationId);
         return Result.success();
     }
 

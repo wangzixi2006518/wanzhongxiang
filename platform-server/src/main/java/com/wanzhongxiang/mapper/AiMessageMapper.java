@@ -13,8 +13,8 @@ import java.util.List;
 public interface AiMessageMapper {
 
     // 向数据库会话中插入一段消息
-    @Insert("insert into ai_message(id ,conversation_id,role,content, status, create_time, update_time)  " +
-            "values (#{id},#{conversationId},#{role},#{content},#{status},#{createTime},#{updateTime})")
+    @Insert("insert into ai_message(id, conversation_id, role, content, status, create_time, update_time, turn_id) " +
+            "values (#{id}, #{conversationId}, #{role}, #{content}, #{status}, #{createTime}, #{updateTime}, #{turnId})")
     int insert(AiMessage aiMessage);
 
     // 更新同一消息的最终状态
@@ -26,4 +26,14 @@ public interface AiMessageMapper {
     @Select("select m.* from ai_message m inner join ai_conversation c on c.id = m.conversation_id  " +
             "where m.conversation_id = #{conversationId} and c.employee_id = #{employeeId} ORDER BY m.seq ASC")
     List<AiMessage> listOwnedByConversationId(String conversationId, Long employeeId);
+
+    // 从数据库只读出完整轮次
+    @Select("select m.* from ai_message m inner join ai_conversation c on c.id = m.conversation_id  " +
+            "where m.conversation_id = #{conversationId} and c.employee_id = #{employeeId} and m.turn_id is not null " +
+            "and m.status = 'COMPLETED' and m.role IN ('USER', 'ASSISTANT') " +
+            "and exists (" +
+            "select 1 from ai_message a where a.conversation_id = m.conversation_id and a.turn_id = m.turn_id and a.role = 'ASSISTANT' and a.status = 'COMPLETED'" +
+            ") ORDER BY m.seq ASC")
+    List<AiMessage> listTurnByConversationId(String conversationId, Long employeeId);
+
 }
