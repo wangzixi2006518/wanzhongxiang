@@ -4,6 +4,7 @@ import com.wanzhongxiang.constant.AiPromptConstant;
 import com.wanzhongxiang.entity.AiMessage;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiMessageService;
+import com.wanzhongxiang.tool.BusinessStatisticsTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -23,6 +24,8 @@ public class AiChatServiceImpl implements AiChatService {
 
     @Autowired
     private AiMessageService aiMessageService;
+    @Autowired
+    private BusinessStatisticsTools businessStatisticsTools;
 
     private final ChatClient chatClient;
     private final ChatMemory chatMemory = // 负责存，保存不同会话
@@ -79,6 +82,7 @@ public class AiChatServiceImpl implements AiChatService {
                         advisorSpec.advisors(chatMemoryAdvisor) // 调用 chatMemoryAdvisor
                         .param(ChatMemory.CONVERSATION_ID, conversationId) // 这次请求属于 conversationId 这个会话
                 )
+                .tools(businessStatisticsTools)
                 .stream() // 请求模型
                 .content(); // 取出回答
     }

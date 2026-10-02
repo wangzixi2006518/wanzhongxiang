@@ -23,6 +23,8 @@ spring:
       chat: ${SPRING_AI_MODEL_CHAT:none}
     deepseek:
       api-key: ${DEEPSEEK_API_KEY:}
+    tools:
+      throw-exception-on-error: true
 
 mybatis:
   #mapper配置文件
