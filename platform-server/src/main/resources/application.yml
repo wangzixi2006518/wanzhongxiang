@@ -21,8 +21,23 @@ spring:
   ai:
     model:
       chat: ${SPRING_AI_MODEL_CHAT:none}
+      embedding: openai
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
     deepseek:
       api-key: ${DEEPSEEK_API_KEY:}
+    openai:
+      embedding:
+        api-key: ${DASHSCOPE_API_KEY:}
+        base-url: https://dashscope.aliyuncs.com/compatible-mode
+        embeddings-path: /v1/embeddings
+        metadata-mode: none
+        options:
+          model: text-embedding-v4
+          dimensions: 1024
     tools:
       throw-exception-on-error: true
 
