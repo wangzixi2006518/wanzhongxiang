@@ -35,7 +35,7 @@ public class RagAnswerService {
     }
 
     // 把候选整理成模型能阅读的资料，把资料整理给模型看
-    private String buildContext(List<Document> documents){
+    public String buildContext(List<Document> documents){
         // 用一个局部 StringBuilder 遍历候选
         StringBuilder stringBuilder = new StringBuilder();
 

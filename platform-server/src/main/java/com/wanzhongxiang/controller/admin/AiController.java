@@ -5,14 +5,13 @@ import com.wanzhongxiang.dto.AiChatDTO;
 import com.wanzhongxiang.dto.AiConversationCreateDTO;
 import com.wanzhongxiang.entity.AiConversation;
 import com.wanzhongxiang.entity.AiMessage;
+import com.wanzhongxiang.rag.RagRetrievalService;
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiConversationService;
 import com.wanzhongxiang.service.AiMessageService;
-import com.wanzhongxiang.vo.AiChatVO;
-import com.wanzhongxiang.vo.AiConversationVO;
-import com.wanzhongxiang.vo.AiHealthVO;
-import com.wanzhongxiang.vo.AiMessageVO;
+import com.wanzhongxiang.vo.*;
+import com.wanzhongxiang.workflow.OrderDispatchWorkflowService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Delete;
@@ -46,6 +45,10 @@ public class AiController {
     private AiConversationService aiConversationService;
     @Autowired
     private AiMessageService aiMessageService;
+    @Autowired
+    private OrderDispatchWorkflowService orderDispatchWorkflowService;
+    @Autowired
+    private RagRetrievalService ragRetrievalService;
 
     @PostMapping("/chat")
     public Result<AiChatVO> chat(@RequestBody AiChatDTO aiChatDTO){
@@ -225,6 +228,27 @@ public class AiController {
         aiConversationService.deleteOwnedById(conversationId, currentId);
         aiChatService.clearConversationMemory(conversationId);
         return Result.success();
+    }
+
+    @GetMapping("/orders/{orderId}/dispatch-analysis")
+    public Result<OrderDispatchAnalysisVO> analyzeDispatch(@PathVariable Long orderId){
+        // 给 analyze(orderId) 添加管理端 HTTP 入口
+
+        // 判断 orderId 是否合法
+        if(orderId <= 0){
+            return Result.error("订单 id 必须为正数");
+        }
+
+        // 取得结果 VO 并返回
+        OrderDispatchAnalysisVO analysisVO = orderDispatchWorkflowService.analyze(orderId);
+        return Result.success(analysisVO);
+    }
+
+    @PostMapping("/rag/index")
+    public Result<Integer> buildRuleIndex(){
+        // 准备规则索引
+        int buildIndex = ragRetrievalService.buildIndex();
+        return Result.success(buildIndex);
     }
 
 
