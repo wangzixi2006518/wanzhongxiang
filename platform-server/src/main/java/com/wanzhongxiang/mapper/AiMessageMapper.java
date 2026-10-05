@@ -36,4 +36,9 @@ public interface AiMessageMapper {
             ") ORDER BY m.seq ASC")
     List<AiMessage> listTurnByConversationId(String conversationId, Long employeeId);
 
+    // 生成中数量查询
+    @Select("select count(*) from ai_message where conversation_id = #{conversationId} and role = 'ASSISTANT' and status = 'GENERATING' ")
+    int countGeneratingAssistant(String conversationId);
+
+
 }

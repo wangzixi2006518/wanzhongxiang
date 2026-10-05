@@ -1,11 +1,14 @@
 package com.wanzhongxiang.handler;
 
 import com.wanzhongxiang.constant.MessageConstant;
+import com.wanzhongxiang.exception.AiConversationBusyException;
 import com.wanzhongxiang.exception.AiConversationNotFoundException;
 import com.wanzhongxiang.exception.BaseException;
 import com.wanzhongxiang.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -55,5 +58,30 @@ public class GlobalExceptionHandler {
         log.error("会话操作失败：{}", ex.getMessage());
         return Result.error(ex.getMessage());
     }
+
+    // 同一会话一次只生成一轮回答的异常处理
+    @ExceptionHandler(AiConversationBusyException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result exceptionHandler(AiConversationBusyException ex){
+        return Result.error(ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result exceptionHandler(MethodArgumentNotValidException ex){
+        // 获取第一个字段错误校验
+        FieldError fieldError = ex.getBindingResult().getFieldError();
+
+        // 有校验提示用提示，没有就用兜底提示
+        String message;
+        if(fieldError != null && fieldError.getDefaultMessage() != null){
+            message = fieldError.getDefaultMessage();
+        }else{
+            message = "请求参数不合法";
+        }
+
+        return Result.error(message);
+    }
+
 
 }

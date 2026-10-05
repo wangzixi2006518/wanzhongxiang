@@ -1,7 +1,9 @@
 package com.wanzhongxiang.service.impl;
 
+import com.wanzhongxiang.constant.MessageConstant;
 import com.wanzhongxiang.entity.AiConversation;
 import com.wanzhongxiang.entity.AiMessage;
+import com.wanzhongxiang.exception.AiConversationBusyException;
 import com.wanzhongxiang.exception.AiConversationNotFoundException;
 import com.wanzhongxiang.mapper.AiConversationMapper;
 import com.wanzhongxiang.mapper.AiMessageMapper;
@@ -9,6 +11,7 @@ import com.wanzhongxiang.service.AiConversationService;
 import com.wanzhongxiang.service.AiMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -60,10 +63,23 @@ public class AiMessageServiceImpl implements AiMessageService {
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AiConversation beginChat(Long employeeId, String requestedConversationId, String question, String assistantMessageId) {
         // 判断是否是第一次对话
         AiConversation conversation = aiConversationService.resolveForChat(requestedConversationId, employeeId);
+
+        // 按当前管理员归属读取并锁定会话行，保护后续的检查与插入
+        AiConversation ownedByIdForUpdate = aiConversationMapper.getOwnedByIdForUpdate(conversation.getId(), employeeId);
+        if(ownedByIdForUpdate == null){
+            throw new AiConversationNotFoundException("会话不存在");
+        }
+
+        // 只统计该会话 role=ASSISTANT 且 status=GENERATING 的消息
+        int countGeneratingAssistant = aiMessageMapper.countGeneratingAssistant(conversation.getId());
+        if(countGeneratingAssistant > 0){
+            throw new AiConversationBusyException("该会话正在生成，请等待结束后再发送");
+        }
+
         // 开启对话时先插入两条信息，一条用户的问题，另一条助手的占位消息（不包含内容）
         String userId = "msg_" + UUID.randomUUID().toString();
         String conversationId = conversation.getId();

@@ -84,4 +84,25 @@ public class AiConversationServiceImpl implements AiConversationService {
         }
     }
 
+    @Override
+    public AiConversation renameOwnedById(String conversationId, Long employeeId, String title) {
+        if (title == null || title.isBlank() || title.strip().length() > 60) {
+            throw new IllegalArgumentException("标题需为1到60字");
+        }
+        AiConversation owned = aiConversationMapper.getOwnedById(conversationId, employeeId);
+        if (owned == null) {
+            throw new AiConversationNotFoundException("会话不存在");
+        }
+        String normalized = title.strip();
+        LocalDateTime updatedAt = LocalDateTime.now();
+        // UPDATE 同样按管理员过滤，避免在查询之后更新到不属于当前管理员的会话。
+        int updated = aiConversationMapper.renameOwnedById(conversationId, employeeId, normalized, updatedAt);
+        if (updated != 1) {
+            throw new AiConversationNotFoundException("会话不存在");
+        }
+        owned.setTitle(normalized);
+        owned.setUpdateTime(updatedAt);
+        return owned;
+    }
+
 }

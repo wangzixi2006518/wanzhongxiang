@@ -38,6 +38,7 @@ public class OrderDispatchWorkflowService {
             Orders.CANCELLED, "已取消"
     );
 
+    // 构造方法
     public OrderDispatchWorkflowService(OrderMapper orderMapper, RagRetrievalService ragRetrievalService, RagAnswerService ragAnswerService, ChatClient.Builder builder) {
         this.orderMapper = orderMapper;
         this.ragRetrievalService = ragRetrievalService;
@@ -121,7 +122,7 @@ public class OrderDispatchWorkflowService {
             return orderDispatchAnalysisVO;
         }
 
-        // 3.调用 buildAnalysisInput() 整理成文字，用工作流取得回答
+        // 3.调用 buildAnalysisInput() 整理成文字取得回答
         String buildAnalysisInput = buildAnalysisInput(context);
         String answer = chatClient.prompt()
                 .user(buildAnalysisInput)
@@ -140,7 +141,7 @@ public class OrderDispatchWorkflowService {
             return orderDispatchAnalysisVO;
         }
 
-        // 6.正常回答，获得真实资料
+        // 6.正常回答校验，获得真实资料
         List<RagSourceVO> sources = ragAnswerService.resolveSources(answer, context.getRuleDocuments());
         orderDispatchAnalysisVO.setAnswer(answer);
         orderDispatchAnalysisVO.setSources(sources);

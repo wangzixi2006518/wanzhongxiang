@@ -23,4 +23,12 @@ public interface AiConversationMapper {
     @Delete("delete from ai_conversation where id = #{conversationId} and employee_id = #{employeeId}")
     int deleteOwnedById(String conversationId, Long employeeId);
 
+    @Update("update ai_conversation set title = #{title}, update_time = #{updatedAt} " +
+            "where id = #{conversationId} and employee_id = #{employeeId}")
+    int renameOwnedById(String conversationId,Long employeeId,String title,java.time.LocalDateTime updatedAt);
+
+    // 增加锁定查询，加上排他锁，直到当前事务结束才释放
+    @Select("select * from ai_conversation where id = #{conversationId} and employee_id = #{employeeId} for update")
+    AiConversation getOwnedByIdForUpdate(String conversationId, Long employeeId);
+
 }

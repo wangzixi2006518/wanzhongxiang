@@ -14,4 +14,6 @@ public interface AiConversationService {
 
     void deleteOwnedById(String conversationId, Long employeeId);
 
+    AiConversation renameOwnedById(String conversationId, Long employeeId, String title);
+
 }

@@ -6,6 +6,7 @@ import com.wanzhongxiang.dto.AiConversationCreateDTO;
 import com.wanzhongxiang.entity.AiConversation;
 import com.wanzhongxiang.entity.AiMessage;
 import com.wanzhongxiang.rag.RagRetrievalService;
+import com.wanzhongxiang.rag.RagAnswerService;
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiConversationService;
@@ -13,6 +14,7 @@ import com.wanzhongxiang.service.AiMessageService;
 import com.wanzhongxiang.vo.*;
 import com.wanzhongxiang.workflow.OrderDispatchWorkflowService;
 import io.swagger.annotations.Api;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.xmlbeans.impl.xb.xsdschema.Public;
@@ -26,6 +28,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +52,11 @@ public class AiController {
     private OrderDispatchWorkflowService orderDispatchWorkflowService;
     @Autowired
     private RagRetrievalService ragRetrievalService;
+    @Autowired
+    private RagAnswerService ragAnswerService;
 
     @PostMapping("/chat")
-    public Result<AiChatVO> chat(@RequestBody AiChatDTO aiChatDTO){
+    public Result<AiChatVO> chat(@RequestBody @Valid AiChatDTO aiChatDTO){
 
         String s = aiChatService.AiChat(aiChatDTO.getMessage()); // 用户的问题
         AiChatVO aiChatVO = new AiChatVO();
@@ -61,7 +66,7 @@ public class AiController {
     }
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<Map<String,String>>> chatStream(@RequestBody AiChatDTO aiChatDTO){
+    public Flux<ServerSentEvent<Map<String,String>>> chatStream(@RequestBody @Valid AiChatDTO aiChatDTO){
         //一连串陆续到来的事件 <事件名称 <事件里的数据<例如 {"content":"你好"}>>>
 
         // 在回答正文前会发送 meta，告知前端本次 AI 回答的 messageId（给每次 AI 回答编号）
@@ -76,8 +81,13 @@ public class AiController {
         // 所以 StringBuilder 要改成 StringBuffer
         StringBuffer chunkBuffer = new StringBuffer();
 
+        // 创建一个表示 n 秒的时长对象，本身不执行等待
+        Duration duration = Duration.ofSeconds(30);
+
         // 将 AiChatFlux 中的元素处理为 Flux<ServerSentEvent<Map<String, String>>>
         Flux<ServerSentEvent<Map<String, String>>> map = aiChatService.AiChatFlux(aiChatDTO.getMessage(), aiConversation.getId(), currentId) // 取出用户的问题
+                // 模型流停滞超时
+                .timeout(duration)
                 // 模型源 Flux<String> 每收到一个 chunk 就追加到 StringBuffer（暂存到内存）
                 .doOnNext(chunk -> chunkBuffer.append(chunk))
                 // 每收到一个元素就转换一次，每个元素都是模型送来的一段文字，命名为 chunk
@@ -228,6 +238,27 @@ public class AiController {
         aiConversationService.deleteOwnedById(conversationId, currentId);
         aiChatService.clearConversationMemory(conversationId);
         return Result.success();
+    }
+
+    @PutMapping("/conversations/{conversationId}/title")
+    public Result<AiConversationVO> renameConversation(@PathVariable String conversationId,
+                                                      @RequestBody AiConversationCreateDTO body) {
+        String title = body.getTitle();
+        if (title == null || title.isBlank() || title.strip().length() > 60) {
+            return Result.error("标题需为1到60字");
+        }
+        AiConversation renamed = aiConversationService.renameOwnedById(
+                conversationId, BaseContext.getCurrentId(), title);
+        return Result.success(toVOByConversation(renamed));
+    }
+
+    @PostMapping("/rag/answer")
+    public Result<RagAnswerVO> answerRules(@RequestBody AiChatDTO body) {
+        String question = body.getMessage();
+        if (question == null || question.isBlank() || question.strip().length() > 500) {
+            return Result.error("问题需为1到500字");
+        }
+        return Result.success(ragAnswerService.answerWithSources(question.strip()));
     }
 
     @GetMapping("/orders/{orderId}/dispatch-analysis")
