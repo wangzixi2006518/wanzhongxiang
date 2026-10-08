@@ -7,6 +7,7 @@ import com.wanzhongxiang.entity.AiConversation;
 import com.wanzhongxiang.entity.AiMessage;
 import com.wanzhongxiang.rag.RagRetrievalService;
 import com.wanzhongxiang.rag.RagAnswerService;
+import com.wanzhongxiang.rag.RuleRetrievalContext;
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiConversationService;
@@ -66,7 +67,7 @@ public class AiController {
     }
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<Map<String,String>>> chatStream(@RequestBody @Valid AiChatDTO aiChatDTO){
+    public Flux<ServerSentEvent<Map<String,Object>>> chatStream(@RequestBody @Valid AiChatDTO aiChatDTO){
         //一连串陆续到来的事件 <事件名称 <事件里的数据<例如 {"content":"你好"}>>>
 
         // 在回答正文前会发送 meta，告知前端本次 AI 回答的 messageId（给每次 AI 回答编号）
@@ -84,59 +85,88 @@ public class AiController {
         // 创建一个表示 n 秒的时长对象，本身不执行等待
         Duration duration = Duration.ofSeconds(30);
 
-        // 将 AiChatFlux 中的元素处理为 Flux<ServerSentEvent<Map<String, String>>>
-        Flux<ServerSentEvent<Map<String, String>>> map = aiChatService.AiChatFlux(aiChatDTO.getMessage(), aiConversation.getId(), currentId) // 取出用户的问题
+        RuleRetrievalContext retrievalContext = new RuleRetrievalContext();
+
+        // 将 AiChatFlux 中的元素处理为 Flux<ServerSentEvent<Map<String, Object>>>
+        Flux<ServerSentEvent<Map<String, Object>>> map = aiChatService.AiChatFlux(aiChatDTO.getMessage(), aiConversation.getId(), currentId,retrievalContext) // 取出用户的问题
                 // 模型流停滞超时
                 .timeout(duration)
                 // 模型源 Flux<String> 每收到一个 chunk 就追加到 StringBuffer（暂存到内存）
                 .doOnNext(chunk -> chunkBuffer.append(chunk))
                 // 每收到一个元素就转换一次，每个元素都是模型送来的一段文字，命名为 chunk
                 .map(chunk ->
-                        ServerSentEvent.<Map<String, String>>builder() // 创建一个 SSE 事件
+                        ServerSentEvent.<Map<String, Object>>builder() // 创建一个 SSE 事件
                                 .event("delta") // 事件命名为 delta，delta 是接口设计时选的名字，对应前端的 delta
                                 .data(Map.of("content", chunk)) // 当前片段放进事件数据
                                 .build()) // 事件对象构造完成
                 // publishOn：从这里开始，后面的流式操作换一条适合干阻塞任务的线程来执行
-                .publishOn(Schedulers.boundedElastic())
+                .publishOn(Schedulers.boundedElastic());
+                // 落库完成搬进 tail，不需要 doOnComplete
                 // 看到异常之后做的事，ex：上游抛出来的异常
-                .doOnError(ex -> {
-                    aiMessageService.failAssistant(messageId,aiConversation.getId(),chunkBuffer.toString());
-                })
+//                .doOnError(ex -> {
+//                    aiMessageService.failAssistant(messageId,aiConversation.getId(),chunkBuffer.toString());
+//                })
                 // 更新内容和状态（写入数据库）
-                .doOnComplete(() -> {
-                    aiMessageService.completeAssistant(messageId,aiConversation.getId(),chunkBuffer.toString());
-                });
+//                .doOnComplete(() -> {
+//                    aiMessageService.completeAssistant(messageId,aiConversation.getId(),chunkBuffer.toString());
+//                });
 
         // 结束
-        Flux<ServerSentEvent<Map<String, String>>> done = Flux.just(
-                ServerSentEvent.<Map<String, String>>builder()
+        Flux<ServerSentEvent<Map<String, Object>>> done = Flux.just(
+                ServerSentEvent.<Map<String, Object>>builder()
                         .event("done") // 命名为 done -> "完成"
-                        .data(Map.<String, String>of()) // {}，结束不用 token
+                        .data(Map.<String, Object>of()) // {}，结束不用 token
                         .build() // 构造
         );
 
-
         // 开始时
-        ServerSentEvent<Map<String, String>> metaEvent = ServerSentEvent.<Map<String, String>>builder()
+        ServerSentEvent<Map<String, Object>> metaEvent = ServerSentEvent.<Map<String, Object>>builder()
                 .event("meta") // 命名为 meta -> AI 开始生成之前
                 .data(Map.of("messageId",messageId,"conversationId",aiConversation.getId())) // 放进事件数据
                 .build(); // 构造
 
+        // 核对校验
+        Flux<ServerSentEvent<Map<String, Object>>> tail =  Flux.defer(() -> { // defer：先保存“要做的动作”，被订阅时才执行
+            // 从 chunkBuffer 读取完整 answer
+            String answer = chunkBuffer.toString();
+
+            // 调用主聊天来源核对方法 resolveSources(answer, retrievalContext)
+            List<RagSourceVO> sources = ragAnswerService.resolveSources(answer, retrievalContext);
+
+            // 构造事件名为 sources 的事件
+            ServerSentEvent<Map<String,Object>> sourceEvent =
+                    ServerSentEvent.<Map<String,Object>>builder()
+                            .event("sources")
+                            .data(Map.of("messageId", messageId, "sources", sources))
+                            .build();
+
+            // 调用一次 completeAssistant，保存同一个完整 answer
+            aiMessageService.completeAssistant(messageId,aiConversation.getId(),answer);
+
+            // 先发送来源事件，再接上已有的结束事件流
+            return Flux.just(sourceEvent).concatWith(done);
+        });
+
         String errorCode = "MODEL_ERROR";
         String errorMessage = "生成失败，请稍后重试";
 
-        // meta -> delta1 -> delta2 -> ... -> done / meta -> delta1 -> 异常 -> error
+        // 正常：meta -> delta... -> sources -> done；失败：meta -> delta... -> error
         return map.startWith(metaEvent) // map 之前先发送一个 meta 事件
-                .concatWith(done) // map 正常结束时发的 done 事件
+                .concatWith(tail) // 模型流正常结束后执行引用核对、完成落库和来源/结束事件，tail：引用核对与正常收尾
+                .doOnError(ex -> { // 两段中的任何一段出错，都保存失败状态
+                    aiMessageService.failAssistant(messageId,aiConversation.getId(),chunkBuffer.toString());
+                })
                 .onErrorResume(ex -> { // 发生异常时，切换为备用 Flux
-                    return Flux.just(ServerSentEvent.<Map<String,String>>builder()
+                    log.error("当前 conversationId：{}，当前 messageId：{}，收到异常 ex：",aiConversation.getId(),messageId,ex);
+                    return Flux.just(ServerSentEvent.<Map<String,Object>>builder()
                             .event("error")
                             .data(Map.of("errorCode",errorCode,
                                     "errorMessage",errorMessage))
                             .build()
                     );
                 })
-                // doOnComplete 处理正常结束，doOnError 处理模型报错
+
+                // tail 处理正常结束；doOnError 处理模型生成与来源核对的错误
                 // 外层 doFinally则能观察包括 CANCEL 在内的终止原因，所以后续要在这里识别取消
                 .doFinally(signalType -> {
                     log.info("conversationId = {}, messageId = {}, signalType = {}", aiConversation.getId(), messageId, signalType);

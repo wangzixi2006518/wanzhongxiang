@@ -2,9 +2,11 @@ package com.wanzhongxiang.service.impl;
 
 import com.wanzhongxiang.constant.AiPromptConstant;
 import com.wanzhongxiang.entity.AiMessage;
+import com.wanzhongxiang.rag.RuleRetrievalContext;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiMessageService;
 import com.wanzhongxiang.tool.BusinessStatisticsTools;
+import com.wanzhongxiang.tool.RuleRetrievalTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AiChatServiceImpl implements AiChatService {
@@ -26,6 +29,8 @@ public class AiChatServiceImpl implements AiChatService {
     private AiMessageService aiMessageService;
     @Autowired
     private BusinessStatisticsTools businessStatisticsTools;
+    @Autowired
+    private RuleRetrievalTools ruleRetrievalTools;
 
     private final ChatClient chatClient;
     private final ChatMemory chatMemory = // 负责存，保存不同会话
@@ -51,12 +56,13 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
-    public Flux<String> AiChatFlux(String message, String conversationId, Long employeeId) {
+    public Flux<String> AiChatFlux(String message, String conversationId, Long employeeId, RuleRetrievalContext retrievalContext) {
         // 从数据库查询已经完整完成的历史轮次
         List<AiMessage> aiMessages = aiMessageService.listTurnByConversationId(conversationId, employeeId);
 
         // 最多取最后 8 条，并转换成 Spring AI 能认识的消息
-        List<Message> historyMessages = aiMessages.stream()
+        List<Message> historyMessages = aiMessages
+                .stream()
                 .skip(Math.max(0, aiMessages.size() - 8)) // 只保留最后 8 条消息
                 // AiMessage -> Spring AI 的 Message
                 .map(aiMessage -> {
@@ -82,7 +88,11 @@ public class AiChatServiceImpl implements AiChatService {
                         advisorSpec.advisors(chatMemoryAdvisor) // 调用 chatMemoryAdvisor
                         .param(ChatMemory.CONVERSATION_ID, conversationId) // 这次请求属于 conversationId 这个会话
                 )
-                .tools(businessStatisticsTools)
+                .tools(businessStatisticsTools,ruleRetrievalTools)
+                .toolContext(Map.of( // Controller 创建记录，Service 传递记录
+                        RuleRetrievalContext.CONTEXT_KEY, // 查找用的键
+                        retrievalContext // Controller 创建的记录对象
+                ))
                 .stream() // 请求模型
                 .content(); // 取出回答
     }

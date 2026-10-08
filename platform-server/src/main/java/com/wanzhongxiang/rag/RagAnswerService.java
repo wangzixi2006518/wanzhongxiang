@@ -1,5 +1,6 @@
 package com.wanzhongxiang.rag;
 
+import com.github.pagehelper.Page;
 import com.wanzhongxiang.constant.AiPromptConstant;
 import com.wanzhongxiang.vo.RagAnswerVO;
 import com.wanzhongxiang.vo.RagSourceVO;
@@ -220,6 +221,44 @@ public class RagAnswerService {
             sources.add(source);
         }
         return sources;
+    }
+
+    public List<RagSourceVO> resolveSources(String answer,RuleRetrievalContext ruleRetrievalContext) {
+        // 主聊天的来源核对
+
+        // 回答为 null、空白，或记录对象缺失
+        if (answer == null || answer.isBlank() || ruleRetrievalContext == null) {
+            throw new IllegalStateException("回答为空或规则检索记录不存在");
+        }
+
+        boolean searched = ruleRetrievalContext.isSearched();
+
+        // 回答 strip() 后等于标准资料不足文本
+        if (answer.strip().equals("当前检索资料不足以回答该问题。")) {
+            return List.of();
+        }
+
+        //  searched=false
+        if (!searched) {
+            // 回答包含 【来源：
+            if(answer.contains("【来源：")){
+                throw new IllegalStateException("未检索规则却出现规则引用"); // 抛异常，没有本轮检索却出现了引用
+            }
+
+            // 回答没有来源标记
+            return List.of(); // 返回空列表，允许普通经营回答或澄清
+        }
+
+        // searched=true
+        List<Document> documents = ruleRetrievalContext.getDocuments(); // 获得候选
+        // 候选非空
+        if(documents == null || documents.isEmpty()){
+            throw new IllegalStateException("没有规则候选，无法支持当前回答"); // 抛异常，不能认可没有依据的规则回答
+        }
+
+        // 已检索规则，且候选非空
+        List<RagSourceVO> ragSourceVOS = resolveSources(answer, documents);
+        return ragSourceVOS;
     }
 
 

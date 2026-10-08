@@ -84,7 +84,7 @@ MySql/
 nginx-1.20.2/                       # 前端静态站点与反向代理
 ```
 
-## 两条 AI 调用链
+## AI 调用链
 
 ### 经营数据对话
 
@@ -100,6 +100,18 @@ nginx-1.20.2/                       # 前端静态站点与反向代理
 ```
 
 数据库保留会话历史；Memory 负责模型请求中的上下文窗口。当前窗口最多 10 条消息，每次先恢复最近最多 8 条完整历史消息。
+
+### 独立规则问答
+
+```text
+规则知识库窗口提交问题
+ → RagRetrievalService.search 检索已有规则片段
+ → 将候选正文与来源标识、用户问题交给聊天模型
+ → 从回答提取引用编号，只在本轮候选中核对
+ → 用真实 Document 返回 answer / sources
+```
+
+普通流式聊天目前接入 Memory 与经营统计工具；规则检索由独立规则窗口调用。建立规则索引后，在规则窗口内提问才会进入这条检索链。无合格候选时直接返回资料不足和空来源，不请求聊天模型；有候选但模型按约定拒答时也返回空来源。
 
 ### 订单派送分析
 
@@ -133,9 +145,11 @@ nginx-1.20.2/                       # 前端静态站点与反向代理
 | GET | `/admin/ai/health` | 通过一次聊天模型调用检查可用性 |
 | POST | `/admin/ai/conversations` | 新建会话 |
 | GET | `/admin/ai/conversations` | 查询当前管理员的会话 |
+| PUT | `/admin/ai/conversations/{conversationId}/title` | 修改所属会话标题 |
 | GET | `/admin/ai/conversations/{conversationId}/messages` | 查询所属会话历史 |
 | DELETE | `/admin/ai/conversations/{conversationId}` | 删除所属会话并清理对应 Memory |
 | POST | `/admin/ai/rag/index` | 显式建立规则索引，返回实际片段数 |
+| POST | `/admin/ai/rag/answer` | 独立规则问答，返回回答和经核对的来源 |
 | GET | `/admin/ai/orders/{orderId}/dispatch-analysis` | 结合订单事实与规则生成派送前提分析 |
 
 流式请求示例：先创建会话，再使用返回的真实 `conversationId`。
@@ -147,7 +161,16 @@ nginx-1.20.2/                       # 前端静态站点与反向代理
 }
 ```
 
-同步单次问答只返回回答文本；Memory 和经营统计工具注册在流式会话路径。通用规则问答由 `RagAnswerService.answerWithSources(question)` 提供，HTTP 入口以 [AiController](platform-server/src/main/java/com/wanzhongxiang/controller/admin/AiController.java) 的实际映射为准。
+同步单次问答只返回回答文本；Memory 和经营统计工具注册在流式会话路径。独立规则问答由 `POST /admin/ai/rag/answer` 调用 `RagAnswerService.answerWithSources(question)` 提供。
+
+## 输入、生成与故障定位
+
+- 聊天接口拒绝空白问题及超过 500 个 Java 字符单位的输入，返回 HTTP 400；这不是 Token 数量限制。
+- 同一会话仍有生成中的助手消息时，拒绝新一轮请求并返回 HTTP 409；不同会话可分别生成。
+- 流式聊天对首个片段和相邻片段之间超过 30 秒的停滞设置超时，持续输出时总时长可以超过 30 秒。
+- 正常结束保存完整回答；模型流失败时调用失败保存方法保留已输出内容，前端收到统一 SSE `error`。错误转换前记录会话 ID、消息 ID 及完整异常栈，用于关联后端原因；HTTP 成功状态不代表流式回答一定成功。
+
+异常日志用于定位进入该流式错误处理分支的故障。HTTP/连接错误、请求进入 Flux 前的异常或浏览器未收到终止事件需要结合各自证据排查，不能只凭“生成失败”标签归因。
 
 ## 本地运行
 
