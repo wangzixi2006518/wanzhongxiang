@@ -3,11 +3,10 @@ package com.wanzhongxiang.controller.admin;
 import com.wanzhongxiang.context.BaseContext;
 import com.wanzhongxiang.dto.AiChatDTO;
 import com.wanzhongxiang.dto.AiConversationCreateDTO;
+import com.wanzhongxiang.dto.RagVersionImportDTO;
 import com.wanzhongxiang.entity.AiConversation;
 import com.wanzhongxiang.entity.AiMessage;
-import com.wanzhongxiang.rag.RagRetrievalService;
-import com.wanzhongxiang.rag.RagAnswerService;
-import com.wanzhongxiang.rag.RuleRetrievalContext;
+import com.wanzhongxiang.rag.*;
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.AiChatService;
 import com.wanzhongxiang.service.AiConversationService;
@@ -51,10 +50,14 @@ public class AiController {
     private AiMessageService aiMessageService;
     @Autowired
     private OrderDispatchWorkflowService orderDispatchWorkflowService;
-    @Autowired
-    private RagRetrievalService ragRetrievalService;
+//    @Autowired
+//    private RagRetrievalService ragRetrievalService;
     @Autowired
     private RagAnswerService ragAnswerService;
+    @Autowired
+    private RagDocumentImportService ragDocumentImportService;
+    @Autowired
+    private RagDocumentCatalogService ragDocumentCatalogService;
 
     @PostMapping("/chat")
     public Result<AiChatVO> chat(@RequestBody @Valid AiChatDTO aiChatDTO){
@@ -191,7 +194,11 @@ public class AiController {
         // 设置 VO 状态
         AiHealthVO aiHealthVO = new AiHealthVO();
         aiHealthVO.setProvider("deepseek");
-        aiHealthVO.setRagReady(false);
+//        aiHealthVO.setRagReady(false);
+
+        // 获取当前生效的 RAG 资料名单
+        List<RagDocumentSpec> specs = ragDocumentCatalogService.listActiveSpecs();
+        aiHealthVO.setRagReady(specs != null && !specs.isEmpty()); // 括号内通过设置 true 否则 false
 
         try {
             String answer = aiChatService.AiChat(AI_HEALTH_TEST); // try catch 边界问题，需要放在try 里面
@@ -305,11 +312,28 @@ public class AiController {
         return Result.success(analysisVO);
     }
 
-    @PostMapping("/rag/index")
-    public Result<Integer> buildRuleIndex(){
-        // 准备规则索引
-        int buildIndex = ragRetrievalService.buildIndex();
-        return Result.success(buildIndex);
+//    @PostMapping("/rag/index")
+//    public Result<Integer> buildRuleIndex(){
+//        // 准备规则索引
+//        int buildIndex = ragRetrievalService.buildIndex();
+//        return Result.success(buildIndex);
+//    }
+
+    // 指定版本导入规则
+    @PostMapping("/rag/versions/import")
+    public Result<Integer> importRuleVersion(@RequestBody @Valid RagVersionImportDTO body){
+        String documentId = body.getDocumentId();
+        String version = body.getVersion();
+        int chunkCount = ragDocumentImportService.importPendingVersion(documentId, version);
+        return Result.success(chunkCount);
+    }
+
+    // 只读就绪接口
+    @GetMapping("/rag/ready")
+    public Result<Boolean> getRuleReady(){
+        List<RagDocumentSpec> activeSpecs = ragDocumentCatalogService.listActiveSpecs();
+        boolean ready = !activeSpecs.isEmpty();
+        return Result.success(ready);
     }
 
 

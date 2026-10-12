@@ -6,3 +6,6 @@
 **/test/
 platform-server/src/main/resources/application-local.yml
 .m2/
+
+# Local persisted RAG indexes
+**/data/rag/

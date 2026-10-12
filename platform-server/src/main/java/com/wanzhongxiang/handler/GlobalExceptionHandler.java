@@ -4,6 +4,7 @@ import com.wanzhongxiang.constant.MessageConstant;
 import com.wanzhongxiang.exception.AiConversationBusyException;
 import com.wanzhongxiang.exception.AiConversationNotFoundException;
 import com.wanzhongxiang.exception.BaseException;
+import com.wanzhongxiang.exception.RagVersionStateException;
 import com.wanzhongxiang.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -81,6 +82,13 @@ public class GlobalExceptionHandler {
         }
 
         return Result.error(message);
+    }
+
+    @ExceptionHandler(RagVersionStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result exceptionHandler(RagVersionStateException ex) {
+        // 读取异常提示，用已有 Result.error 返回
+        return Result.error(ex.getMessage());
     }
 
 

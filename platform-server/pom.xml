@@ -118,7 +118,7 @@
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-vector-store</artifactId>
+            <artifactId>spring-ai-starter-vector-store-milvus</artifactId>
         </dependency>
 
         <!-- poi -->

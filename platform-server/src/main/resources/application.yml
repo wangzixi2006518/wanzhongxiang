@@ -40,6 +40,21 @@ spring:
           dimensions: 1024
     tools:
       throw-exception-on-error: true
+    vectorstore:
+      type: milvus
+      milvus:
+        client:
+          host: ${WZX_MILVUS_HOST:localhost}
+          port: ${WZX_MILVUS_PORT:19530}
+          connect-timeout-ms: 5000
+          rpc-deadline-ms: 10000
+        database-name: default
+        collection-name: wzx_rule_chunks
+        embedding-dimension: 1024
+        initialize-schema: true
+        metric-type: COSINE
+        index-type: FLAT
+        index-parameters: '{}'
 
 mybatis:
   #mapper配置文件
