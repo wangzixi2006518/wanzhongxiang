@@ -1,10 +1,12 @@
 package com.wanzhongxiang.mapper;
 
 import com.github.pagehelper.Page;
+import com.wanzhongxiang.dto.BusinessPeriodStatsDTO;
 import com.wanzhongxiang.dto.GoodsSalesDTO;
 import com.wanzhongxiang.dto.OrdersPageQueryDTO;
 import com.wanzhongxiang.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDateTime;
@@ -52,5 +54,11 @@ public interface OrderMapper {
 
     // 销量排名 top10
     List<GoodsSalesDTO> getSalesTop10(LocalDateTime begin,LocalDateTime end);
+
+    // 区间查询
+    BusinessPeriodStatsDTO aggregateCompletedPeriod(
+            @Param("begin") LocalDateTime begin,
+            @Param("endExclusive") LocalDateTime endExclusive,
+            @Param("status") Integer status);
 
 }

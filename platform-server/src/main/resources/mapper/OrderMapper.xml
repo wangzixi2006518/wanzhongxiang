@@ -109,5 +109,15 @@
         limit 0,10;
     </select>
 
+    <select id="aggregateCompletedPeriod" resultType="com.wanzhongxiang.dto.BusinessPeriodStatsDTO">
+        SELECT
+            COUNT(*) AS valid_order_count,
+            COALESCE(SUM(amount), 0) AS turnover
+        FROM orders
+        WHERE status = #{status}
+          AND order_time &gt;= #{begin}
+          AND order_time &lt; #{endExclusive}
+    </select>
+
 
 </mapper>

@@ -1,7 +1,9 @@
 package com.wanzhongxiang.service.impl;
 
+import com.wanzhongxiang.dto.BusinessPeriodStatsDTO;
 import com.wanzhongxiang.dto.GoodsSalesDTO;
 import com.wanzhongxiang.entity.Orders;
+import com.wanzhongxiang.exception.BusinessComparisonParameterException;
 import com.wanzhongxiang.mapper.OrderMapper;
 import com.wanzhongxiang.mapper.UserMapper;
 import com.wanzhongxiang.service.ReportService;
@@ -19,9 +21,13 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -251,8 +257,61 @@ public class ReportServiceImpl implements ReportService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    @Override
+    public BusinessComparisonVO compareBusiness(LocalDate currentBegin, LocalDate currentEnd, LocalDate baselineBegin, LocalDate baselineEnd) {
+        // 比较选定日期间的数据
 
+        // 先进行日期检查
+        validateComparisonRanges(currentBegin,currentEnd,baselineBegin,baselineEnd);
+
+        // 查询两段对比的日期数据
+        BusinessPeriodStatsDTO currentStats = queryPeriodStats(currentBegin, currentEnd);
+        BusinessPeriodStatsDTO baselineStats = queryPeriodStats(baselineBegin, baselineEnd);
+
+        // 读取两个金额并规范为2位小数
+        BigDecimal currentTurnover  = currentStats.getTurnover().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal baselineTurnover = baselineStats.getTurnover().setScale(2, RoundingMode.HALF_UP);
+
+        // 计算两个周期的客单价和营业差额
+        BigDecimal currentUnitPrice  = calculateUnitPrice(currentTurnover, currentStats.getValidOrderCount());
+        BigDecimal baselineUnitPrice = calculateUnitPrice(baselineTurnover, baselineStats.getValidOrderCount());
+        BigDecimal turnoverDifference  = currentTurnover.subtract(baselineTurnover);
+
+        // 计算营业额变化率
+        BigDecimal turnoverChangeRate; // 变化率
+        if(baselineTurnover.compareTo(BigDecimal.ZERO) == 0){ // 判断基准营业额是否为 0
+            turnoverChangeRate = null;
+        }else{ // 计算变化率
+            turnoverChangeRate = turnoverDifference.divide(
+                    baselineTurnover, // 除数
+                    4, // 结果保留 4 位小数
+                    RoundingMode.HALF_UP // 四舍五入
+            );
+        }
+
+        // 封装返回
+        BusinessComparisonVO result = new BusinessComparisonVO();
+
+        result.setCurrentBegin(currentBegin);
+        result.setCurrentEnd(currentEnd);
+        result.setBaselineBegin(baselineBegin);
+        result.setBaselineEnd(baselineEnd);
+
+        result.setCurrentValidOrderCount(currentStats.getValidOrderCount());
+        result.setBaselineValidOrderCount(baselineStats.getValidOrderCount());
+
+        result.setCurrentTurnover(currentTurnover);
+        result.setBaselineTurnover(baselineTurnover);
+
+        result.setCurrentUnitPrice(currentUnitPrice);
+        result.setBaselineUnitPrice(baselineUnitPrice);
+
+        result.setTurnoverDifference(turnoverDifference);
+        result.setTurnoverChangeRate(turnoverChangeRate);
+
+        return result;
     }
 
     // 根据条件统计订单数量
@@ -263,6 +322,82 @@ public class ReportServiceImpl implements ReportService {
         map.put("status",status);
 
         return orderMapper.countByMap(map);
+    }
+
+    // 校验对比时间范围
+    private void validateComparisonRanges(LocalDate currentBegin, LocalDate currentEnd,
+                                          LocalDate baselineBegin, LocalDate baselineEnd){
+        // 在查询数据库前，检查用户传入的两个时间段是否合法
+
+        // 检查四个日期是否为空
+        if(currentBegin == null || currentEnd == null || baselineBegin == null || baselineEnd == null){
+            throw new BusinessComparisonParameterException("日期参数不能为空");
+        }
+
+        // 检查每个周期的开始日期不能晚于结束日期
+        if(currentBegin.isAfter(currentEnd)){
+            throw new BusinessComparisonParameterException("开始日期不能晚于结束日期");
+        }
+        if (baselineBegin.isAfter(baselineEnd)) {
+            throw new BusinessComparisonParameterException("开始日期不能晚于结束日期");
+        }
+
+        // 检查两个周期的结束日期必须早于今天
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Shanghai"));
+        if (!currentEnd.isBefore(today) || !baselineEnd.isBefore(today)) {
+            throw new BusinessComparisonParameterException("统计周期结束日期必须早于今天");
+        }
+
+        // 检查每个周期最多31天
+        long currentDays = ChronoUnit.DAYS.between(currentBegin, currentEnd) + 1;
+        long baselineDays = ChronoUnit.DAYS.between(baselineBegin, baselineEnd) + 1;
+        if(currentDays > 31 || baselineDays > 31){
+            throw new BusinessComparisonParameterException("统计周期不能超过31天");
+        }
+
+        // 两个周期的天数必须相同
+        if (currentDays != baselineDays) {
+            throw new BusinessComparisonParameterException("当前周期与基准周期的天数必须相同");
+        }
+
+        // 基准周期必须完全早于当前周期
+        if (!baselineEnd.isBefore(currentBegin)) {
+            throw new BusinessComparisonParameterException("基准周期结束日期必须早于当前周期开始日期");
+        }
+    }
+
+    // 查询某个周期的营业数据
+    private BusinessPeriodStatsDTO queryPeriodStats(LocalDate beginDate, LocalDate endDate){
+        // 查询指定时间范围内的有效订单数量和营业额
+
+        // 将 LocalDate 转换为 LocalDateTime
+        LocalDateTime begin = beginDate.atStartOfDay();
+        LocalDateTime endExclusive = endDate.plusDays(1).atStartOfDay();
+
+        // 调用查询方法
+        BusinessPeriodStatsDTO businessPeriodStatsDTO = orderMapper.aggregateCompletedPeriod(begin, endExclusive, Orders.COMPLETED);
+        if(businessPeriodStatsDTO == null || businessPeriodStatsDTO.getValidOrderCount() == null || businessPeriodStatsDTO.getTurnover() == null){
+            throw new IllegalStateException("经营统计结果不完整");
+        }
+        return businessPeriodStatsDTO;
+    }
+
+    // 计算客单价
+    private BigDecimal calculateUnitPrice(BigDecimal turnover, long validOrderCount){
+        // 根据营业额和有效订单数计算平均每单金额
+
+        // 如果笔数为 0 返回 0.0
+        if(validOrderCount == 0){
+            return BigDecimal.ZERO // 表示数字 0
+                    .setScale(2); // 表示设置两位小数
+        }
+
+        // 营业额 / 有效订单数，保留两位小数，四舍五入
+        return turnover.divide(
+                BigDecimal.valueOf(validOrderCount), // 除数
+                2, // 保留两位小数
+                RoundingMode.HALF_UP // 四舍五入
+        );
     }
 
 }

@@ -1,9 +1,6 @@
 package com.wanzhongxiang.service;
 
-import com.wanzhongxiang.vo.OrderReportVO;
-import com.wanzhongxiang.vo.SalesTop10ReportVO;
-import com.wanzhongxiang.vo.TurnoverReportVO;
-import com.wanzhongxiang.vo.UserReportVO;
+import com.wanzhongxiang.vo.*;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
@@ -24,4 +21,8 @@ public interface ReportService {
 
     // 导出运营数据报表
     void exportBusinessData(HttpServletResponse response);
+
+    // 比较业务
+    BusinessComparisonVO compareBusiness(LocalDate currentBegin, LocalDate currentEnd,
+                                         LocalDate baselineBegin, LocalDate baselineEnd);
 }

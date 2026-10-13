@@ -2,10 +2,7 @@ package com.wanzhongxiang.controller.admin;
 
 import com.wanzhongxiang.result.Result;
 import com.wanzhongxiang.service.ReportService;
-import com.wanzhongxiang.vo.OrderReportVO;
-import com.wanzhongxiang.vo.SalesTop10ReportVO;
-import com.wanzhongxiang.vo.TurnoverReportVO;
-import com.wanzhongxiang.vo.UserReportVO;
+import com.wanzhongxiang.vo.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -74,5 +72,23 @@ public class ReportController {
     public void export(HttpServletResponse response){
         reportService.exportBusinessData(response);
     }
+
+    @GetMapping("/businessComparison")
+    public Result<BusinessComparisonVO> businessComparison(
+            @RequestParam("currentBegin")
+            // 日期格式转换注解
+            // 告诉 Spring MVC：将前端传来的日期字符串按照 yyyy-MM-dd 格式解析成 LocalDate 对象
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate currentBegin,
+            @RequestParam("currentEnd")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate currentEnd,
+            @RequestParam("baselineBegin")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineBegin,
+            @RequestParam("baselineEnd")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineEnd
+            ){
+        BusinessComparisonVO businessComparisonVO = reportService.compareBusiness(currentBegin, currentEnd, baselineBegin, baselineEnd);
+        return Result.success(businessComparisonVO);
+    }
+
 
 }
