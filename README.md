@@ -1,272 +1,318 @@
-# 万众享平台 · Java 后端 + AI 运营助手
+# 万众享平台 · Java 后端与 AI 运营助手
 
-万众享平台面向商户运营和用户交易场景，提供商品、组合商品、订单及运营统计等业务功能。在已有 Java 后端上接入 Spring AI，实现流式对话、会话历史、短期记忆、经营数据工具调用、规则检索与订单派送分析。
+面向商户运营与用户消费场景的 Java 后端项目，涵盖商品与组合商品管理、购物车、订单处理和运营统计。在业务系统上接入 Spring AI，提供流式多轮对话、经营数据查询，以及带引用来源和资料版本管理的平台规则问答。
 
-本仓库保存后端源码。管理端前端、数据库初始化脚本和 Nginx 配置目前位于独立工作区，运行完整系统时需要另行准备。
+本仓库保存**后端源码**。管理端前端、数据库初始化脚本、规则资料与 Nginx 配置目前位于独立工作区，需要另行准备；克隆本仓库不等于获得完整可直接启动的系统。下文按当前代码说明功能、运行前提与实现边界。
 
-## 功能概览
+## 核心功能
 
-### 业务功能
-
-- 管理员登录与 JWT 身份校验。
-- 商品分类、商品和组合商品管理。
-- 订单查询、接单、派送、完成及取消等状态处理。
-- 商户营业状态、运营数据统计与报表。
-- 文件上传与阿里云 OSS 对接。
-- WebSocket 订单提醒基础服务。
-
-### AI 运营助手
-
-| 能力 | 当前实现 |
+| 模块 | 当前实现 |
 | --- | --- |
-| 模型接入 | 使用 Spring AI 接入 DeepSeek，提供同步问答与流式问答 |
-| SSE 流式输出 | 使用 Reactor Flux 输出 `meta / delta / done / error` 事件，支持取消生成 |
-| 会话历史 | 会话及消息保存到 MySQL，记录生成中、完成、失败和取消状态；按当前管理员校验会话归属 |
-| Chat Memory | 按会话隔离上下文，每次从数据库恢复最近完整轮次，再交给消息窗口与 Memory Advisor |
-| Tool Calling | 模型按问题选择经营统计工具，由后端查询真实已完成订单的笔数和营业额 |
-| RAG 检索 | 规则文档读取、Token 切分、Embedding 向量化和相似度检索 |
-| 规则问答与引用 | 用检索正文生成回答，从本轮候选中核对引用并返回来源标题、版本、片段标识和原文 |
-| 固定 Workflow | 后端按固定顺序组合订单事实、规则检索、模型分析及引用核对，判断订单在读取时刻是否满足开始派送前提 |
-
-经营统计工具目前支持“昨天”和明确指定的过去日期，例如：
-
-- “昨天已完成订单多少笔，营业额多少元？”
-- “2026-09-28 已完成订单多少笔，营业额多少元？”
-
-数据由业务 Service 与数据库查询提供。明确日期工具会检查日期格式并拒绝今天及未来日期。
+| 业务管理 | 管理员 JWT 认证，商品、组合商品、购物车、订单状态处理、运营统计与报表 |
+| 订单事务 | Spring 声明式事务统一控制订单主表、明细写入及购物车清理 |
+| 经营区间对比 | SQL 聚合已完成订单，Java 使用 BigDecimal 计算客单价、营业额差值与变化率，处理日期边界和零基数 |
+| AI 流式对话 | Spring AI ChatClient + SSE，支持生成终态、取消、历史恢复与连续追问 |
+| 会话管理 | MySQL 保存会话和消息，按认证管理员校验归属；从最近完整成功轮次恢复 ChatMemory |
+| 经营数据工具 | Tool Calling 查询昨天或指定过去日期的已完成订单数和营业额，复用后端统计服务 |
+| RAG 规则问答 | 按章节与 Token 分片，Embedding 后写入 Milvus，按生效版本检索并核对本轮引用 |
+| 资料版本发布 | MySQL 管理 PENDING / READY 与当前生效版本；先写索引，再事务发布，失败保留旧生效版本 |
+| 固定分析流程 | 后端依次读取订单事实、检索规则、调用模型和核对来源，分析读取时刻是否满足开始派送前提 |
 
 ## 技术栈
 
-| 层次 | 技术 |
+| 层次 | 技术与配置 |
 | --- | --- |
 | 后端 | Java 17、Spring Boot **3.5.16**、Maven 多模块 |
-| AI | Spring AI **1.1.8**、ChatClient、Memory Advisor、Tool Calling、Reactor Flux |
-| 聊天模型 | DeepSeek |
-| Embedding | 阿里云百炼 `text-embedding-v4`，通过 OpenAI 兼容协议接入，当前为 **1024 维** |
-| 检索存储 | Spring AI `SimpleVectorStore`，当前使用内存索引 |
-| 数据与认证 | MyBatis、MySQL、Redis、JWT |
+| 数据访问与认证 | MyBatis、MySQL、Redis、JWT |
+| AI 应用 | Spring AI **1.1.8**、ChatClient、MessageChatMemoryAdvisor、Tool Calling、Reactor Flux |
+| 聊天模型 | DeepSeek，通过 `DEEPSEEK_API_KEY` 配置 |
+| Embedding | 阿里云百炼 `text-embedding-v4`，OpenAI 兼容协议，当前 **1024 维** |
+| 向量存储 | Milvus；本地验收使用 **2.5.8**，集合 `wzx_rule_chunks`，`COSINE` 度量、`FLAT` 索引 |
 | 接口与通信 | Springdoc OpenAPI、SSE、WebSocket |
-| 配套管理端 | Vue 2、TypeScript、Vue Router、Vuex、Element UI、Axios、ECharts |
-| 配套部署 | Nginx |
+| 独立配套管理端 | Vue 2、TypeScript、Vue Router、Vuex、Element UI、Axios、ECharts、Nginx |
 
-DeepSeek 聊天和百炼 Embedding 使用各自的 API Key。
+MySQL 保存订单、会话、消息和资料版本等业务事实；Milvus 保存规则片段向量、正文及元数据。聊天和 Embedding 使用各自的模型与 API Key。
 
-## 项目结构
+## 关键实现
+
+### 1. 订单事务与经营区间对比
+
+下单方法将订单主表写入、明细批量写入和当前用户购物车清理放入同一数据库事务。该事务范围不包含远端支付或向量库，也没有在这条下单流程中额外实现商品库存扣减。
+
+经营对比接口接收当前周期与基准周期的四个日期：
+
+- 日期非空、开始不晚于结束，两个周期结束日期均早于上海时区的今天。
+- 每段包含的自然日数量不超过 31 天，两段天数相同。
+- 基准周期完全早于当前周期，不重叠。
+- SQL 以 `status = 5` 的已完成订单为范围，按 `order_time` 使用 `>= 开始日零点`、`< 结束日次日零点` 筛选。
+- `COUNT(*)` 统计笔数，`COALESCE(SUM(amount), 0)` 统计营业额；Java 计算客单价、差值及变化率。
+- 金额和客单价保留两位小数，变化率保留四位，使用 `HALF_UP`；基准营业额为零时变化率返回 `null`，订单数为零时客单价为 `0.00`。
+
+变化率返回比例，例如 `0.2000` 表示 `20%`。查询失败不作为零营业额返回。当前口径是“按下单时间筛选的已完成订单”，不等同于按收款时间统计财务流水。
+
+### 2. 流式会话、历史与工具调用
+
+```text
+管理员问题 + 可选 conversationId
+ → JWT 验证身份，按管理员校验会话归属
+ → 短事务锁定会话，检查是否已有 GENERATING 回答
+ → 写入用户消息与助手占位消息
+ → 从 MySQL 读取完整成功轮次，恢复 ChatMemory
+ → ChatClient 注册经营统计工具与规则检索工具
+ → 模型按问题提出工具调用，Java 服务执行真实查询或检索
+ → SSE 增量输出
+ → 核对本轮来源，保存完整回答与 COMPLETED 状态
+```
+
+- 正常事件顺序：`meta → delta... → sources → done`；异常时返回 SSE `error`。
+- 助手状态从 `GENERATING` 进入 `COMPLETED`、`FAILED` 或 `CANCELLED`。终态更新带 `status = 'GENERATING'` 条件，限制重复覆盖。
+- 历史页面保留消息与终态；模型上下文只读取有成功助手回答的完整轮次，以 `turn_id` 关联并按 `seq` 排序。
+- 每次恢复最近最多 **8 条历史消息**，普通一问一答约为 4 轮；`MessageWindowChatMemory` 配置 `maxMessages(10)`，条数不等于轮数或 Token 数。
+- 同一会话存在生成中回答时返回 HTTP 409。数据库行锁只覆盖检查与占位的短事务，不持续锁住整个模型生成过程。
+- 流式链路使用 30 秒停滞超时，约束首片段及相邻片段等待；持续输出时整轮时长可以超过 30 秒。
+- 取消连接时保存已生成内容快照和取消状态；本地取消不代表远端立即停止生成或不再计费。
+
+经营工具由 `BusinessStatisticsTools` 提供：
+
+| 工具 | 用途 |
+| --- | --- |
+| `query_yesterday_turnover` | 查询昨天已完成订单的笔数和营业额 |
+| `query_turnover_by_date` | 查询明确指定的过去完整日期，校验日期格式、真实性并拒绝今天及未来日期 |
+| `search_platform_rules` | 检索本轮平台规则正文与来源，供主聊天生成回答 |
+
+日期工具复用 `WorkspaceService`。经营区间对比目前由 `ReportService` 的独立 HTTP 接口提供，**尚未直接注册成区间对比工具**。
+
+### 3. RAG 文档处理与来源核对
+
+```text
+规则资料
+ → TextReader 读取，附加文档、版本和来源元数据
+ → 按独占行的 “## ” 识别章节
+ → TokenTextSplitter 对章节切片，保留章节标题
+ → 为最终片段补充 chunk_id、章节信息和稳定 UUID
+ → Embedding + Milvus
+
+本轮规则问题
+ → 从 MySQL 查询启用文档及其 READY 生效版本
+ → 按 (document_id AND version) 配对条件过滤
+ → 问题 Embedding、Milvus 相似度检索
+ → 组织片段正文与来源信息，交给模型
+ → 提取回答中的来源编号，只在本轮真实候选内核对
+```
+
+当前切片目标约 400 Token，检索使用 `topK=2`、`similarityThreshold=0.5`。阈值是候选筛选门槛，不是答案正确概率。
+
+主聊天已经接入规则检索工具；独立规则窗口仍可调用 `/admin/ai/rag/answer`。本轮检索是否发生、取回哪些候选，由请求级 `RuleRetrievalContext` 记录；历史回答中的旧来源不能直接作为本轮引用依据。没有候选时返回资料不足；向量服务或模型调用异常按技术失败处理。
+
+来源核对会拒绝本轮不存在的引用，并从真实 `Document` 组装文档名、版本、片段编号和正文。它验证来源对应关系，**不保证模型对规则的每一句解释都正确**。
+
+### 4. 资料版本发布与索引持久化
+
+```text
+登记新资料版本（PENDING）
+ → 查询待导入 spec
+ → 读取并切分资料
+ → 按该 document_id + version 清理待导入版本残留片段
+ → 向 Milvus 写入全部新片段
+ → MySQL 事务：版本改 READY + 更新 active_version
+ → 后续查询按新生效版本检索
+```
+
+- 查询要求文档已启用、版本为 READY，且与目录当前生效版本一致；多个文档以成对条件 OR 组合。
+- 导入失败时不发布新版本，已有生效版本继续可用；首次导入若没有旧版，则仍需明确资料未就绪。
+- `publishVersion` 的事务只保护 MySQL 两项更新，不能回滚 Milvus。写入失败或发布失败可能留下未生效的新片段，重试时清理目标 PENDING 版本后再导入。
+- 稳定片段 UUID 不等于自动 upsert。当前版本的 Milvus 适配器使用插入路径，项目通过状态、版本清理与发布顺序组织重试。
+- `synchronized` 导入只约束同一 JVM，未实现多实例分布式导入互斥和自动补偿。
+- 资料索引已持久化到 Milvus，**应用或 Milvus 服务重启后可复用原索引，不需要因为重启重新导入**。新的问题仍需要查询 Embedding，生成回答仍需要聊天模型。
+
+本地验收曾对 4 份文档、18 个片段做过目录、版本过滤和重启读回验证；这些是开发验收数据，不代表生产规模、完整准确率评估或备份恢复保障。
+
+## 项目结构与代码入口
 
 ```text
 wanzhongxiang/
-├── platform-common/                # 公共常量、上下文、异常、配置属性和工具类
-├── platform-pojo/                  # 实体、DTO、VO
-├── platform-server/                # Spring Boot 启动与业务模块
+├── platform-common/                # 常量、上下文、异常与配置属性
+├── platform-pojo/                  # Entity、DTO、VO
+├── platform-server/
 │   └── src/main/
 │       ├── java/com/wanzhongxiang/
-│       │   ├── controller/         # 管理端、用户端接口
-│       │   ├── service/            # 业务服务与 AI 会话服务
+│       │   ├── controller/         # 管理端与用户端入口
+│       │   ├── service/            # 业务、统计与 AI 会话服务
 │       │   ├── mapper/             # MyBatis 数据访问
-│       │   ├── tool/               # 经营统计工具
-│       │   ├── rag/                # 文档加载、向量化、检索、问答与引用
+│       │   ├── tool/               # 经营统计与规则检索工具
+│       │   ├── rag/                # 分片、目录、索引、检索与引用核对
 │       │   └── workflow/           # 订单派送分析固定流程
-│       └── resources/              # Spring 配置、Mapper XML、报表模板
+│       └── resources/              # 配置、Mapper XML、报表模板
 ├── pom.xml
 └── README.md
 ```
 
-配套工作区资源：
+| 实现 | 源码 |
+| --- | --- |
+| 订单提交事务 | [OrderServiceImpl](platform-server/src/main/java/com/wanzhongxiang/service/impl/OrderServiceImpl.java) |
+| 经营区间对比 | [ReportServiceImpl](platform-server/src/main/java/com/wanzhongxiang/service/impl/ReportServiceImpl.java)、[OrderMapper.xml](platform-server/src/main/resources/mapper/OrderMapper.xml) |
+| SSE 与消息生命周期 | [AiController](platform-server/src/main/java/com/wanzhongxiang/controller/admin/AiController.java)、[AiMessageServiceImpl](platform-server/src/main/java/com/wanzhongxiang/service/impl/AiMessageServiceImpl.java) |
+| 记忆恢复与工具注册 | [AiChatServiceImpl](platform-server/src/main/java/com/wanzhongxiang/service/impl/AiChatServiceImpl.java) |
+| 经营工具与规则工具 | [BusinessStatisticsTools](platform-server/src/main/java/com/wanzhongxiang/tool/BusinessStatisticsTools.java)、[RuleRetrievalTools](platform-server/src/main/java/com/wanzhongxiang/tool/RuleRetrievalTools.java) |
+| 文档处理 | [RagDocumentLoader](platform-server/src/main/java/com/wanzhongxiang/rag/RagDocumentLoader.java) |
+| 索引导入与版本发布 | [RagDocumentImportService](platform-server/src/main/java/com/wanzhongxiang/rag/RagDocumentImportService.java)、[RagIndexService](platform-server/src/main/java/com/wanzhongxiang/rag/RagIndexService.java)、[RagDocumentCatalogService](platform-server/src/main/java/com/wanzhongxiang/rag/RagDocumentCatalogService.java) |
+| 检索与来源 | [RagRetrievalService](platform-server/src/main/java/com/wanzhongxiang/rag/RagRetrievalService.java)、[RagAnswerService](platform-server/src/main/java/com/wanzhongxiang/rag/RagAnswerService.java) |
+| 固定分析流程 | [OrderDispatchWorkflowService](platform-server/src/main/java/com/wanzhongxiang/workflow/OrderDispatchWorkflowService.java) |
 
-```text
-MySql/
-├── wanzhongxiang-platform.sql       # 业务数据库初始化
-└── wanzhongxiang-ai.sql             # AI 会话与消息表，旧版需补齐 turn_id
+## 管理端接口
 
-万众享平台前端源码/
-└── wanzhongxiang-admin-vue-ts/      # 独立管理端工程
-
-nginx-1.20.2/                       # 前端静态站点与反向代理
-```
-
-## AI 调用链
-
-### 经营数据对话
-
-```text
-管理员问题 + conversationId
- → 校验管理员身份和会话归属
- → 保存用户消息与生成中的助手消息
- → 从数据库恢复最近完整轮次，准备 Chat Memory
- → ChatClient + 经营统计工具
- → 模型选择工具，后端查询数据库，模型组织回答
- → SSE 增量输出
- → 保存完成、失败或取消状态
-```
-
-数据库保留会话历史；Memory 负责模型请求中的上下文窗口。当前窗口最多 10 条消息，每次先恢复最近最多 8 条完整历史消息。
-
-### 独立规则问答
-
-```text
-规则知识库窗口提交问题
- → RagRetrievalService.search 检索已有规则片段
- → 将候选正文与来源标识、用户问题交给聊天模型
- → 从回答提取引用编号，只在本轮候选中核对
- → 用真实 Document 返回 answer / sources
-```
-
-普通流式聊天目前接入 Memory 与经营统计工具；规则检索由独立规则窗口调用。建立规则索引后，在规则窗口内提问才会进入这条检索链。无合格候选时直接返回资料不足和空来源，不请求聊天模型；有候选但模型按约定拒答时也返回空来源。
-
-### 订单派送分析
-
-```text
-管理员指定订单主键
- → Controller 调用 OrderDispatchWorkflowService.analyze(orderId)
- → Mapper 读取订单状态，记录 queriedAt
- → 检索“开始派送”相关规则
- → 将数据库事实、状态名称、规则正文和分析任务交给模型
- → 核对本轮引用来源
- → 返回 orderId / orderStatus / queriedAt / answer / sources
-```
-
-这条流程的执行顺序由后端代码确定。模型负责阅读事实和规则、生成解释，分析接口本身不会修改订单状态或执行派送。
-
-相关实现：
-[会话服务](platform-server/src/main/java/com/wanzhongxiang/service/impl/AiChatServiceImpl.java)、
-[经营工具](platform-server/src/main/java/com/wanzhongxiang/tool/BusinessStatisticsTools.java)、
-[规则检索](platform-server/src/main/java/com/wanzhongxiang/rag/RagRetrievalService.java)、
-[规则问答](platform-server/src/main/java/com/wanzhongxiang/rag/RagAnswerService.java)、
-[订单 Workflow](platform-server/src/main/java/com/wanzhongxiang/workflow/OrderDispatchWorkflowService.java)。
-
-## AI 接口
-
-下表对应仓库当前已提交的后端入口，均沿用管理端 JWT，请求头为 `token`。
+除登录外，以下业务入口使用管理端 JWT，请求头为 `token`。
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| POST | `/admin/ai/chat` | 同步单次问答 |
-| POST | `/admin/ai/chat/stream` | 带会话的 SSE 流式问答、Memory 与 Tool Calling |
-| GET | `/admin/ai/health` | 通过一次聊天模型调用检查可用性 |
+| POST | `/admin/employee/login` | 管理员登录，取得 Token |
+| POST | `/admin/ai/chat` | 同步单次问答；不使用流式路径中的 Memory 与工具注册 |
+| POST | `/admin/ai/chat/stream` | SSE 多轮对话、经营工具和规则检索 |
+| GET | `/admin/ai/health` | 实际调用一次聊天模型，返回模型状态与目录级 ragReady |
 | POST | `/admin/ai/conversations` | 新建会话 |
-| GET | `/admin/ai/conversations` | 查询当前管理员的会话 |
+| GET | `/admin/ai/conversations` | 当前管理员会话列表 |
 | PUT | `/admin/ai/conversations/{conversationId}/title` | 修改所属会话标题 |
-| GET | `/admin/ai/conversations/{conversationId}/messages` | 查询所属会话历史 |
-| DELETE | `/admin/ai/conversations/{conversationId}` | 删除所属会话并清理对应 Memory |
-| POST | `/admin/ai/rag/index` | 显式建立规则索引，返回实际片段数 |
-| POST | `/admin/ai/rag/answer` | 独立规则问答，返回回答和经核对的来源 |
-| GET | `/admin/ai/orders/{orderId}/dispatch-analysis` | 结合订单事实与规则生成派送前提分析 |
+| GET | `/admin/ai/conversations/{conversationId}/messages` | 所属会话历史 |
+| DELETE | `/admin/ai/conversations/{conversationId}` | 删除所属会话并清理 Memory |
+| POST | `/admin/ai/rag/versions/import` | 导入已登记的 PENDING 版本并发布，返回片段数 |
+| GET | `/admin/ai/rag/ready` | 查询是否存在生效目录 |
+| POST | `/admin/ai/rag/answer` | 独立规则问答与经核对的来源 |
+| GET | `/admin/ai/orders/{orderId}/dispatch-analysis` | 读取订单事实与规则，生成派送前提分析 |
+| GET | `/admin/report/businessComparison` | 当前周期与基准周期的经营数据对比 |
 
-流式请求示例：先创建会话，再使用返回的真实 `conversationId`。
+流式请求示例；首次可不传 `conversationId`，后续使用服务端返回的真实 ID：
 
 ```json
 {
   "message": "昨天已完成订单多少笔，营业额多少元？",
-  "conversationId": "<创建会话接口返回的ID>"
+  "conversationId": "<已有会话ID>"
 }
 ```
 
-同步单次问答只返回回答文本；Memory 和经营统计工具注册在流式会话路径。独立规则问答由 `POST /admin/ai/rag/answer` 调用 `RagAnswerService.answerWithSources(question)` 提供。
+区间查询参数示例：
 
-## 输入、生成与故障定位
+```text
+/admin/report/businessComparison?currentBegin=2026-10-05&currentEnd=2026-10-11&baselineBegin=2026-09-28&baselineEnd=2026-10-04
+```
 
-- 聊天接口拒绝空白问题及超过 500 个 Java 字符单位的输入，返回 HTTP 400；这不是 Token 数量限制。
-- 同一会话仍有生成中的助手消息时，拒绝新一轮请求并返回 HTTP 409；不同会话可分别生成。
-- 流式聊天对首个片段和相邻片段之间超过 30 秒的停滞设置超时，持续输出时总时长可以超过 30 秒。
-- 正常结束保存完整回答；模型流失败时调用失败保存方法保留已输出内容，前端收到统一 SSE `error`。错误转换前记录会话 ID、消息 ID 及完整异常栈，用于关联后端原因；HTTP 成功状态不代表流式回答一定成功。
-
-异常日志用于定位进入该流式错误处理分支的故障。HTTP/连接错误、请求进入 Flux 前的异常或浏览器未收到终止事件需要结合各自证据排查，不能只凭“生成失败”标签归因。
+日期示例需按实际当前日期调整。核心返回字段包括两个周期的 `ValidOrderCount`、`Turnover`、`UnitPrice`，以及 `turnoverDifference`、`turnoverChangeRate`；订单数以已完成订单为口径。
 
 ## 本地运行
 
-### 1. 准备环境与数据库
+### 1. 环境与外部资源
 
-准备 JDK 17、Maven、MySQL 和 Redis。完整管理端还需要配套前端工程及其 Node.js 环境。
+准备 JDK 17、Maven、MySQL、Redis 和可连接的 Milvus；完整页面还需要独立管理端与 Nginx。默认后端端口 `8080`，Milvus 客户端端口默认 `19530`。
 
 ```bash
 git clone https://github.com/wangzixi2006518/wanzhongxiang.git
 cd wanzhongxiang
 ```
 
-创建数据库 `wanzhongxiang_platform`，导入配套业务 SQL 和 AI 表结构。当前消息 Mapper 依赖 `ai_message.turn_id` 与 `seq`：旧版 AI 建表脚本未包含 `turn_id` 时，需要在目标库确认字段不存在后补充：
+业务初始化脚本 `wanzhongxiang-platform.sql`、AI 脚本 `wanzhongxiang-ai.sql` 和规则 TXT 当前未纳入本仓库，需要从配套工作区准备，不能省略建表直接运行。AI 表至少需要：
+
+| 表 | 关键字段与约束 |
+| --- | --- |
+| `ai_conversation` | `id`、`employee_id`、`title`、创建/更新时间 |
+| `ai_message` | `id`、`conversation_id`、`turn_id`、`role`、`content`、`status`、创建/更新时间、唯一递增 `seq`；消息关联会话 |
+| `ai_rule_document` | `document_id` 主键、标题、`enabled`、`active_version`、创建/更新时间 |
+| `ai_rule_document_version` | 自增主键、`document_id`、`version`、来源类型/路径、状态、片段数、创建/更新时间；文档与版本联合唯一 |
+
+旧 AI 建表脚本可能没有 `turn_id`。先检查目标表，确认缺失后补充，已有该列不要重复执行：
 
 ```sql
-ALTER TABLE ai_message
-    ADD COLUMN turn_id VARCHAR(64) NULL AFTER conversation_id;
+SHOW COLUMNS FROM ai_message LIKE 'turn_id';
+-- 仅在确认不存在时执行：
+ALTER TABLE ai_message ADD COLUMN turn_id VARCHAR(64) NULL AFTER conversation_id;
 ```
 
-管理员账号来自 `employee` 表，普通用户来自 `user` 表；登录信息以实际导入数据为准。
+### 2. 配置本机连接与模型
 
-### 2. 配置本机连接和模型凭据
-
-默认加载 `local` profile。首次运行可复制已有配置模板，再编辑本机信息：
+默认加载 `local` profile。首次运行可复制已提交的配置模板；已有本机配置时直接编辑，不要覆盖：
 
 ```powershell
 Copy-Item platform-server/src/main/resources/application-dev.yml platform-server/src/main/resources/application-local.yml
 ```
 
-在 `application-local.yml` 中确认 `wzx.datasource`、`wzx.redis` 的主机、端口、数据库和认证信息。OSS 与微信对接参数也由该配置提供，使用对应功能时填写实际值。本机配置已被 Git 忽略。
+确认 `wzx.datasource`、`wzx.redis` 的主机、端口、数据库和认证；OSS 与微信功能按需要填写配套参数。`application-local.yml` 已被 Git 忽略。
 
-在启动后端的 PowerShell 中设置环境变量：
+在启动后端的 PowerShell 或 IDEA 运行配置中提供环境变量：
 
 ```powershell
 $env:SPRING_AI_MODEL_CHAT = "deepseek"
-$env:DEEPSEEK_API_KEY = "<你的DeepSeek API Key>"
-$env:DASHSCOPE_API_KEY = "<你的百炼API Key>"
+$env:DEEPSEEK_API_KEY = "<DeepSeek API Key>"
+$env:DASHSCOPE_API_KEY = "<百炼 API Key>"
 $env:WZX_DATASOURCE_USERNAME = "<数据库用户名>"
 $env:WZX_DATASOURCE_PASSWORD = "<数据库密码>"
-$env:WZX_REDIS_PASSWORD = "<Redis密码；无密码时设为空字符串>"
-$env:WZX_JWT_ADMIN_SECRET_KEY = "<自定义管理员JWT签名密钥>"
-$env:WZX_JWT_USER_SECRET_KEY = "<自定义用户JWT签名密钥>"
+$env:WZX_REDIS_PASSWORD = "<Redis密码；无密码时为空字符串>"
+$env:WZX_MILVUS_HOST = "<Milvus主机地址>"
+$env:WZX_MILVUS_PORT = "19530"
+$env:WZX_JWT_ADMIN_SECRET_KEY = "<管理员JWT签名密钥>"
+$env:WZX_JWT_USER_SECRET_KEY = "<用户JWT签名密钥>"
 ```
 
-以上尖括号内容是占位符，填写时替换整个占位符。使用 IDEA 时，在运行配置中提供相同变量；已有本机配置覆盖的值以实际配置优先级为准。不要将真实凭据写入 README 或提交到 Git。
+尖括号为占位符，使用时替换整个值。不要把真实凭据写入 README 或提交到 Git。百炼 Embedding 使用 `https://dashscope.aliyuncs.com/compatible-mode` 与 `/v1/embeddings`，模型、地域、API Key 和 1024 维配置应一致。
 
-当前百炼 Embedding 地址为 `https://dashscope.aliyuncs.com/compatible-mode`，请求路径为 `/v1/embeddings`；使用与该地域匹配的 Key。
+Milvus 连接与集合参数在 [application.yml](platform-server/src/main/resources/application.yml) 中配置；使用虚拟机时先确认已开机、地址可达及 Milvus 服务正常。当前 `initialize-schema: true` 允许创建所需集合，不是每次启动重新导入资料。
 
-### 3. 准备规则文档
+### 3. 准备资料并登记待导入版本
 
-文档加载器读取：
+新资料采用 UTF-8 TXT，每章以独占行 `## ` 开头，标题和正文均不能为空。将资料放入 `platform-server/src/main/resources/knowledge/` 后，以 `classpath:knowledge/...` 记录路径；先准备文件再启动或重新打包。
+
+下面是**新文档首次登记示例**，文件与编号均为示例，需要自行准备：
 
 ```text
-platform-server/src/main/resources/knowledge/order-processing-rules-v1.txt
+knowledge/order-rules-demo.txt
+
+## 规则主题
+在这里填写从实际业务确认的规则正文。
+
+## 另一个规则主题
+在这里填写对应的条件、限制与处理说明。
 ```
 
-该规则资源目前保存在本地工作区，需要随运行环境另行提供。现有版本为从订单业务代码整理的“万众享订单处理规则说明”，涉及取消、拒单、派送与完成等条件；文档与元数据版本应保持一致。
+可调用 `RagDocumentCatalogService.registerVersion(spec)` 登记。当前没有单独的版本登记 HTTP 接口；通过数据库管理时，先确认文档与版本不存在，再按实际表结构登记，例如：
 
-首次规则检索或订单分析前，登录管理端并调用 `POST /admin/ai/rag/index`。后端重启后需重新建立内存索引。
+```sql
+START TRANSACTION;
+INSERT INTO ai_rule_document
+(document_id, document_title, enabled, active_version, create_time, update_time)
+VALUES ('demo_order_rules', '订单规则示例', 1, NULL, NOW(), NOW());
 
-### 4. 启动后端
-
-IDEA 运行入口：
-
-```text
-platform-server/src/main/java/com/wanzhongxiang/WanZhongXiangApplication.java
+INSERT INTO ai_rule_document_version
+(document_id, version, source_type, source_path, status, chunk_count, create_time, update_time)
+VALUES ('demo_order_rules', 'v1', 'manual',
+        'classpath:knowledge/order-rules-demo.txt', 'PENDING', 0, NOW(), NOW());
+COMMIT;
 ```
 
-或在仓库根目录执行：
+已有文档更新时登记新的版本，不覆盖已发布版本或提前修改 `active_version`。资料就绪后登录管理端，调用 `POST /admin/ai/rag/versions/import`：
+
+```json
+{
+  "documentId": "demo_order_rules",
+  "version": "v1"
+}
+```
+
+接口只接收已登记文档 ID 与版本。成功后返回片段数并发布；同一 READY 版本不能再作为 PENDING 导入。旧的 `/admin/ai/rag/index` 已不再提供建立内存索引入口。
+
+### 4. 启动后端与配套管理端
+
+IDEA 运行 `platform-server/src/main/java/com/wanzhongxiang/WanZhongXiangApplication.java`，或在仓库根目录执行：
 
 ```bash
 mvn clean package -DskipTests
 java -jar platform-server/target/platform-server-1.0-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-MySQL、Redis 和模型配置需在启动前准备好；默认后端端口为 `8080`。
-
-接口文档：
+启动前准备好数据库、Redis、Milvus 和模型配置。接口文档：
 
 - Swagger UI：`http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON：`http://localhost:8080/v3/api-docs`
 
-### 5. 启动配套管理端
+独立管理端工程使用 `npm install`、`npm run serve`，开发地址为 `http://localhost:8888/#/login`，联调时关闭 AI Mock。前端 `/api/` 对应后端 `/admin/`；生产构建需要重新执行 `npm run build` 并同步 Nginx 静态目录。
 
-在独立前端工程目录执行：
-
-```bash
-npm install
-npm run serve
-```
-
-开发地址为 `http://localhost:8888/#/login`。前端使用 `/api` 作为管理端请求前缀，开发代理目标为 `http://localhost:8080/admin`；联调时关闭 AI Mock。
-
-生产构建执行 `npm run build`，将 `dist` 内容复制到 Nginx 的 `html/wanzhongxiang`。访问 `http://localhost/` 时，页面来自这份静态构建，源码修改后需重新构建并同步。
-
-Nginx 中管理端代理的基本配置：
+SSE 反向代理需要关闭缓冲，下面是配套 Nginx 的基本示例：
 
 ```nginx
 location /api/ {
@@ -281,12 +327,14 @@ location = /api/ai/chat/stream {
 }
 ```
 
-WebSocket 提醒另需匹配前端连接地址与 Nginx 的 Upgrade 转发配置。
+WebSocket 提醒另需匹配前端连接地址与 Upgrade 转发配置。
 
-## 当前实现范围
+## 验证与实现边界
 
-- 向量索引使用内存存储，当前检索参数为 `topK=2`、`similarityThreshold=0.5`，尚未接入持久化向量数据库。
-- 检索相关性只用于筛选候选；空结果返回资料不足，Embedding 或聊天调用失败继续作为异常处理。引用核对保证来源来自本轮真实片段，不保证模型结论必然正确。
-- 健康接口会实际请求聊天模型；当前 `ragReady` 字段仍固定为 `false`，不能据此判断是否已经建立索引。
-- 配套管理端已做本地业务与 AI 联调；旧小程序未完成本次平台改造的适配，不能将现有模拟订单当作真实小程序下单、支付链路已经验证。
-- 本地工作区有定向测试与验收记录；当前 Git 忽略了测试目录及 `*Test.java`，不将其描述为仓库已有的 CI 或完整生产保障体系。
+- 已有本地功能、定向测试与联调记录，覆盖会话归属/终态、规则来源、资料版本过滤、真实存储读回及区间计算等；部分验证由工具辅助。仓库忽略测试目录与 `*Test.java`，不将本地记录描述为已公开的 CI 测试体系。
+- `GET /admin/ai/health` 会实际调用聊天模型，可能产生调用成本。`ragReady` 和 `/rag/ready` 依据生效目录判断，不等于 Embedding、Milvus 和整条问答链路均可用。
+- 聊天开始前的问题长度与归属错误通过 HTTP 响应处理；流式输出后的模型或来源错误通过 SSE `error` 表达，HTTP 200 不代表整轮成功。
+- 当前结构化来源卡片主要通过本轮 `sources` 返回，消息历史未完整保存来源快照，不保证刷新后重现原卡片。
+- 应用突然退出可能遗留 GENERATING，资料导入也未实现分布式任务接管、自动补偿、备份恢复或高可用保障。
+- 固定订单派送分析只解释数据库读取时刻的事实与规则，不修改订单状态，也不执行真实派送。
+- 配套管理端已进行本地业务与 AI 联调；旧小程序和真实支付链路不能由模拟订单或管理端测试推定为已经完整验收。
