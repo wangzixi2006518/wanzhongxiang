@@ -4,7 +4,7 @@
 
 经营数字由后端工具查询真实订单，平台规则由生效知识库提供依据；资料不足时拒答，引用不合法时中止正常收尾并反馈失败。本地 **50 题固定集**中，Top-2 完整依据命中率与可回答题正确率均为 **37/40（92.5%）**，10 道无答案题均正确拒答。指标定义、测试条件和失败案例见下文「RAG 质量评测」。
 
-本仓库保存**后端源码**。管理端前端、数据库初始化脚本、规则资料与 Nginx 配置目前位于独立工作区，需要另行准备；克隆本仓库不等于获得完整可直接启动的系统。下文按当前代码说明功能、运行前提与实现边界。
+本仓库提供**Java 后端、Vue 管理端、数据库初始化脚本、规则资料、Nginx 配置和 RAG 评测材料**。克隆后可按下文完成本地安装；MySQL、Redis、Milvus 与模型服务仍需自行配置。当前目录没有可独立运行的用户端小程序源码，用户端接口与管理端页面分开说明。
 
 ## 核心功能
 
@@ -30,7 +30,7 @@
 | Embedding | 阿里云百炼 `text-embedding-v4`，OpenAI 兼容协议，当前 **1024 维** |
 | 向量存储 | Milvus；本地验收使用 **2.5.8**，集合 `wzx_rule_chunks`，`COSINE` 度量、`FLAT` 索引 |
 | 接口与通信 | Springdoc OpenAPI、SSE、WebSocket |
-| 独立配套管理端 | Vue 2、TypeScript、Vue Router、Vuex、Element UI、Axios、ECharts、Nginx |
+| 管理端 | Vue 2、TypeScript、Vue Router、Vuex、Element UI、Axios、ECharts、Nginx |
 
 MySQL 保存订单、会话、消息和资料版本等业务事实；Milvus 保存规则片段向量、正文及元数据。聊天和 Embedding 使用各自的模型与 API Key。
 
@@ -208,13 +208,18 @@ MySQL 保存订单、会话、消息和资料版本等业务事实；Milvus 保�
 
 - 真实 HTTP 响应之外，检索候选使用相同模型、维度、过滤和检索参数独立重放取得；全部 52 条返回引用均在重放候选中，但重放不是运行中 Java 进程的内部埋点。
 - 本轮仅评估独立规则接口，不涵盖 SSE 工具选择、多轮记忆或经营工具查询；旧规则快照中的统计边界不替代后来区间对比接口的实现。
-- 题集、资料快照、原始响应、候选、逐题评分及哈希检查记录保存在本地 `docs/evaluation/rag-20261021/`，**当前未纳入 GitHub 仓库**；本节提供结果汇总与统计口径。
+- [评测报告与复现说明](docs/evaluation/rag-20261021/REPORT.md)、[固定题集](docs/evaluation/rag-20261021/dataset.json)、[原始响应](docs/evaluation/rag-20261021/raw-results.jsonl)、[逐题复核](docs/evaluation/rag-20261021/cases.md)及[指标汇总](docs/evaluation/rag-20261021/summary.json)随仓库提供；不包含模型密钥或管理员 Token。
 - 这是小知识库的一次固定集结果，没有优化前后对照，不代表生产或通用准确率。后续比较 Top-K、分片或提示词时，应固定其他条件、保留失败题，并用未参与调参的问题复验；当前未实现混合检索、重排或多智能体编排。
 
 ## 项目结构与代码入口
 
 ```text
 wanzhongxiang/
+├── frontend/admin/                 # Vue 2 + TypeScript 管理端、锁文件与单元测试
+├── database/                       # 表结构、合成演示数据、待导入规则目录
+├── deploy/nginx/                   # 静态页面、API、SSE、WebSocket 代理配置
+├── docs/evaluation/rag-20261021/    # 50 题评测原始结果与复核材料
+├── .mvn/、mvnw、mvnw.cmd           # Maven Wrapper
 ├── platform-common/                # 常量、上下文、异常与配置属性
 ├── platform-pojo/                  # Entity、DTO、VO
 ├── platform-server/
@@ -226,7 +231,7 @@ wanzhongxiang/
 │       │   ├── tool/               # 经营统计与规则检索工具
 │       │   ├── rag/                # 分片、目录、索引、检索与引用核对
 │       │   └── workflow/           # 订单派送分析固定流程
-│       └── resources/              # 配置、Mapper XML、报表模板
+│       └── resources/              # 配置、Mapper XML、报表模板与 knowledge 规则
 ├── pom.xml
 └── README.md
 ```
@@ -283,142 +288,163 @@ wanzhongxiang/
 
 ## 本地运行
 
-### 1. 环境与外部资源
+### 1. 环境与仓库
 
-准备 JDK 17、Maven、MySQL、Redis 和可连接的 Milvus；完整页面还需要独立管理端与 Nginx。默认后端端口 `8080`，Milvus 客户端端口默认 `19530`。
+- JDK **17**（确认 `JAVA_HOME` 与 `java -version`，不要误用系统中的 JDK 8）。
+- Node.js 与 npm：沿用 Vue CLI 3 / Webpack 4，脚本已包含 `--openssl-legacy-provider`；本次使用 Node **24.18.0**、npm **11.16.0** 验证。
+- MySQL **8**、Redis，以及可连接的 Milvus（本地验收版本 **2.5.8**）。
+- DeepSeek API Key 与百炼 Embedding API Key；图片上传、微信登录和支付另需对应服务配置。
 
 ```bash
 git clone https://github.com/wangzixi2006518/wanzhongxiang.git
 cd wanzhongxiang
 ```
 
-业务初始化脚本 `wanzhongxiang-platform.sql`、AI 脚本 `wanzhongxiang-ai.sql` 和规则 TXT 当前未纳入本仓库，需要从配套工作区准备，不能省略建表直接运行。AI 表至少需要：
+仓库包含 Maven Wrapper，无需单独安装 Maven；首次运行仍需联网下载 Maven 与依赖。前端锁文件已将过期淘宝源替换为 npm 官方源，保留依赖版本与完整性校验。
 
-| 表 | 关键字段与约束 |
-| --- | --- |
-| `ai_conversation` | `id`、`employee_id`、`title`、创建/更新时间 |
-| `ai_message` | `id`、`conversation_id`、`turn_id`、`role`、`content`、`status`、创建/更新时间、唯一递增 `seq`；消息关联会话 |
-| `ai_rule_document` | `document_id` 主键、标题、`enabled`、`active_version`、创建/更新时间 |
-| `ai_rule_document_version` | 自增主键、`document_id`、`version`、来源类型/路径、状态、片段数、创建/更新时间；文档与版本联合唯一 |
+### 2. 初始化空数据库
 
-旧 AI 建表脚本可能没有 `turn_id`。先检查目标表，确认缺失后补充，已有该列不要重复执行：
+在仓库根目录启动 MySQL 客户端，例如 `mysql -u root -p --default-character-set=utf8mb4`，然后执行：
 
 ```sql
-SHOW COLUMNS FROM ai_message LIKE 'turn_id';
--- 仅在确认不存在时执行：
-ALTER TABLE ai_message ADD COLUMN turn_id VARCHAR(64) NULL AFTER conversation_id;
+CREATE DATABASE wanzhongxiang_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+USE wanzhongxiang_platform;
+SOURCE database/01-business-schema.sql;
+SOURCE database/02-ai-schema.sql;
+SOURCE database/03-demo-data.sql;
+SOURCE database/04-rule-catalog.sql;
 ```
 
-### 2. 配置本机连接与模型
+脚本用于**新建空库**，不对现有业务库做自动迁移。包含 11 张业务表、4 张 AI 表，消息表已经带有 `turn_id`；不需要再手工补列。详见 [数据库说明](database/README.md)。
 
-默认加载 `local` profile。首次运行可复制已提交的配置模板；已有本机配置时直接编辑，不要覆盖：
+演示账号：**`admin / Demo123456!`**。商品与组合商品均为合成数据，初始没有用户、订单或聊天记录，经营查询返回无订单属于正常情况。默认密码仅供本地体验，正式使用前修改；当前登录服务沿用 MD5 存储，不应把演示认证当作生产安全方案。
 
-```powershell
-Copy-Item platform-server/src/main/resources/application-dev.yml platform-server/src/main/resources/application-local.yml
-```
+### 3. 配置并启动后端
 
-确认 `wzx.datasource`、`wzx.redis` 的主机、端口、数据库和认证；OSS 与微信功能按需要填写配套参数。`application-local.yml` 已被 Git 忽略。
-
-在启动后端的 PowerShell 或 IDEA 运行配置中提供环境变量：
+新安装使用已提交的 [application-demo.yml](platform-server/src/main/resources/application-demo.yml)，通过环境变量覆盖连接和凭据，**不需要复制本机私有配置**。在启动后端的同一个 PowerShell 窗口中填写：
 
 ```powershell
-$env:SPRING_AI_MODEL_CHAT = "deepseek"
+$env:WZX_DATASOURCE_USERNAME = "<MySQL用户名>"
+$env:WZX_DATASOURCE_PASSWORD = "<MySQL密码；无密码则为空字符串>"
 $env:DEEPSEEK_API_KEY = "<DeepSeek API Key>"
 $env:DASHSCOPE_API_KEY = "<百炼 API Key>"
-$env:WZX_DATASOURCE_USERNAME = "<数据库用户名>"
-$env:WZX_DATASOURCE_PASSWORD = "<数据库密码>"
-$env:WZX_REDIS_PASSWORD = "<Redis密码；无密码时为空字符串>"
+$env:WZX_JWT_ADMIN_SECRET_KEY = "<至少32字节的管理员签名密钥>"
+$env:WZX_JWT_USER_SECRET_KEY = "<至少32字节的用户端签名密钥>"
 $env:WZX_MILVUS_HOST = "<Milvus主机地址>"
-$env:WZX_MILVUS_PORT = "19530"
-$env:WZX_JWT_ADMIN_SECRET_KEY = "<管理员JWT签名密钥>"
-$env:WZX_JWT_USER_SECRET_KEY = "<用户JWT签名密钥>"
 ```
 
-尖括号为占位符，使用时替换整个值。不要把真实凭据写入 README 或提交到 Git。百炼 Embedding 使用 `https://dashscope.aliyuncs.com/compatible-mode` 与 `/v1/embeddings`，模型、地域、API Key 和 1024 维配置应一致。
+尖括号是占位符，替换整个值。聊天使用 DeepSeek，Embedding 使用百炼 `text-embedding-v4`、1024 维，两个 Key 不通用。环境变量只在后端使用，不能放入前端的 `VUE_APP_*`。
 
-Milvus 连接与集合参数在 [application.yml](platform-server/src/main/resources/application.yml) 中配置；使用虚拟机时先确认已开机、地址可达及 Milvus 服务正常。当前 `initialize-schema: true` 允许创建所需集合，不是每次启动重新导入资料。
+| 可选变量 | demo 默认值 / 作用 |
+| --- | --- |
+| `WZX_DATASOURCE_HOST` / `WZX_DATASOURCE_PORT` | `localhost` / `3306` |
+| `WZX_DATASOURCE_DATABASE` | `wanzhongxiang_platform` |
+| `WZX_REDIS_HOST` / `WZX_REDIS_PORT` | `localhost` / `6379` |
+| `WZX_REDIS_PASSWORD` / `WZX_REDIS_DATABASE` | 空密码 / `10`，建议使用项目独立逻辑库 |
+| `WZX_MILVUS_HOST` / `WZX_MILVUS_PORT` | `localhost` / `19530` |
+| `WZX_OSS_ENDPOINT` / `WZX_OSS_ACCESS_KEY_ID` / `WZX_OSS_ACCESS_KEY_SECRET` / `WZX_OSS_BUCKET_NAME` | 需要上传图片时配置；未配置不能使用 OSS 上传 |
+| `WZX_WECHAT_*` | 需要真实微信登录、支付和退款时填写，字段见 demo 配置 |
 
-### 3. 准备资料并登记待导入版本
+Windows 构建与启动：
 
-新资料采用 UTF-8 TXT，每章以独占行 `## ` 开头，标题和正文均不能为空。将资料放入 `platform-server/src/main/resources/knowledge/` 后，以 `classpath:knowledge/...` 记录路径；先准备文件再启动或重新打包。
-
-下面是**新文档首次登记示例**，文件与编号均为示例，需要自行准备：
-
-```text
-knowledge/order-rules-demo.txt
-
-## 规则主题
-在这里填写从实际业务确认的规则正文。
-
-## 另一个规则主题
-在这里填写对应的条件、限制与处理说明。
+```powershell
+.\mvnw.cmd -Dmaven.test.skip=true package
+java -jar platform-server/target/platform-server-1.0-SNAPSHOT.jar --spring.profiles.active=demo
 ```
 
-可调用 `RagDocumentCatalogService.registerVersion(spec)` 登记。当前没有单独的版本登记 HTTP 接口；通过数据库管理时，先确认文档与版本不存在，再按实际表结构登记，例如：
+macOS / Linux 使用 `chmod +x mvnw` 后执行 `./mvnw -Dmaven.test.skip=true package`，再用相同 Java 命令启动；环境变量用当前 shell 的 `export` 设置。上面的打包命令跳过测试，不代表所有依赖外部服务的测试均已执行。
 
-```sql
-START TRANSACTION;
-INSERT INTO ai_rule_document
-(document_id, document_title, enabled, active_version, create_time, update_time)
-VALUES ('demo_order_rules', '订单规则示例', 1, NULL, NOW(), NOW());
+IDEA 可以运行 `WanZhongXiangApplication`，同时设置相同环境变量与 active profile `demo`。已有 `application-local.yml` 的开发者可继续使用自己的 `local` profile；默认 `application.yml` 仍保留原有本地设置，不会覆盖私有文件。
 
-INSERT INTO ai_rule_document_version
-(document_id, version, source_type, source_path, status, chunk_count, create_time, update_time)
-VALUES ('demo_order_rules', 'v1', 'manual',
-        'classpath:knowledge/order-rules-demo.txt', 'PENDING', 0, NOW(), NOW());
-COMMIT;
+默认后端端口 **8080**，文档入口：`http://localhost:8080/swagger-ui/index.html`，OpenAPI：`http://localhost:8080/v3/api-docs`。Milvus 的 `initialize-schema: true` 允许创建集合，不会自动导入规则正文。
+
+### 4. 启动管理端
+
+在另一个终端执行：
+
+```powershell
+cd frontend/admin
+$env:CYPRESS_INSTALL_BINARY = "0"
+npm ci --legacy-peer-deps
+npm run serve
 ```
 
-已有文档更新时登记新的版本，不覆盖已发布版本或提前修改 `active_version`。资料就绪后登录管理端，调用 `POST /admin/ai/rag/versions/import`：
+开发地址：**`http://localhost:8888/#/login`**。默认 `/api` 转发到后端 `/admin`，WebSocket 直连本机后端，AI Mock 默认关闭。`CYPRESS_INSTALL_BINARY=0` 仅跳过本地开发不需要的 Cypress 浏览器下载，不影响应用构建与单元测试；需要运行 E2E 时自行安装对应浏览器。
 
-```json
-{
-  "documentId": "demo_order_rules",
-  "version": "v1"
+后端不在本机时，新建已忽略的 `frontend/admin/.env.development.local`，覆盖 `VUE_APP_URL` 和 `VUE_APP_SOCKET_URL`。详见 [管理端说明](frontend/admin/README.md)。
+
+### 5. 导入随仓库提供的规则
+
+[knowledge/day13](platform-server/src/main/resources/knowledge/day13) 包含 4 份按源码整理的规则快照，初始化 SQL 只登记为 `PENDING`，不会假装索引已经存在。
+
+后端启动后，在仓库根目录的 PowerShell 中登录并逐份导入：
+
+```powershell
+$loginBody = @{ username = "admin"; password = "Demo123456!" } | ConvertTo-Json
+$login = Invoke-RestMethod -Method Post -Uri "http://localhost:8080/admin/employee/login" -ContentType "application/json" -Body $loginBody
+$headers = @{ token = $login.data.token }
+$documents = @(
+    @{ documentId = "wx_order_rules"; version = "v2-20261009" },
+    @{ documentId = "wx_product_rules"; version = "v1-20261009" },
+    @{ documentId = "wx_shop_rules"; version = "v1-20261009" },
+    @{ documentId = "wx_statistics_rules"; version = "v1-20261009" }
+)
+foreach ($document in $documents) {
+    Invoke-RestMethod -Method Post -Uri "http://localhost:8080/admin/ai/rag/versions/import" -Headers $headers -ContentType "application/json" -Body ($document | ConvertTo-Json)
 }
+Invoke-RestMethod -Uri "http://localhost:8080/admin/ai/rag/ready" -Headers $headers
 ```
 
-接口只接收已登记文档 ID 与版本。成功后返回片段数并发布；同一 READY 版本不能再作为 PENDING 导入。旧的 `/admin/ai/rag/index` 已不再提供建立内存索引入口。
+检查每次返回的业务 `code` 和片段数，再测试问答；HTTP 200 本身不表示导入成功。导入会调用 Embedding 模型，必须能连接百炼和 Milvus。成功后版本改为 `READY` 并发布，同一 READY 版本不能重复作为 PENDING 导入；失败时检查日志与目录状态后再重试。
 
-### 4. 启动后端与配套管理端
+规则采用 UTF-8 TXT、独占行 `## ` 章节标题。更新资料应新增文档版本，先登记 `source_path` 与 `PENDING` 状态，再调用导入接口，不覆盖旧生效版本或提前修改 `active_version`。当前没有独立版本登记 HTTP 接口；数据库字段和登记示例见 [规则目录初始化 SQL](database/04-rule-catalog.sql)。
 
-IDEA 运行 `platform-server/src/main/java/com/wanzhongxiang/WanZhongXiangApplication.java`，或在仓库根目录执行：
+这些资料是源码说明快照，不是正式运营制度；评测中的 18 个片段与其版本绑定。应用或 Milvus 重启后复用持久化索引，不需要因重启再次导入。
 
-```bash
-mvn clean package -DskipTests
-java -jar platform-server/target/platform-server-1.0-SNAPSHOT.jar --spring.profiles.active=local
+### 6. 生产构建与 Nginx 本地预览
+
+```powershell
+cd frontend/admin
+npm run build
+cd ../..
+New-Item -ItemType Directory -Force deploy/nginx/logs | Out-Null
+# 将 nginx 替换为本机安装的 Nginx 可执行文件路径。
+nginx -e stderr -p "$((Get-Location).Path.Replace('\','/'))/" -c deploy/nginx/nginx.conf -t
+nginx -e stderr -p "$((Get-Location).Path.Replace('\','/'))/" -c deploy/nginx/nginx.conf
 ```
 
-启动前准备好数据库、Redis、Milvus 和模型配置。接口文档：
+配置文件为 [deploy/nginx/nginx.conf](deploy/nginx/nginx.conf)，**以前述仓库根目录为 prefix**，静态目录为 `frontend/admin/dist`，页面地址 `http://localhost:8081/#/login`。管理 API 转发 `/api/ → /admin/`，SSE 关闭代理缓冲，WebSocket 配置 Upgrade。默认后端目标为 `127.0.0.1:8080`；异机部署时修改配置中的目标地址。
 
-- Swagger UI：`http://localhost:8080/swagger-ui/index.html`
-- OpenAPI JSON：`http://localhost:8080/v3/api-docs`
+Linux 同样先创建 `deploy/nginx/logs`，使用 `nginx -e stderr -p /absolute/path/to/wanzhongxiang/ -c deploy/nginx/nginx.conf`。此配置用于本地或自行部署，不会附带 Windows Nginx 二进制、证书或机器上的旧静态文件；公网部署另行配置域名与 HTTPS。
 
-独立管理端工程使用 `npm install`、`npm run serve`，开发地址为 `http://localhost:8888/#/login`，联调时关闭 AI Mock。前端 `/api/` 对应后端 `/admin/`；生产构建需要重新执行 `npm run build` 并同步 Nginx 静态目录。
+### 7. 检查与评测复现
 
-SSE 反向代理需要关闭缓冲，下面是配套 Nginx 的基本示例：
-
-```nginx
-location /api/ {
-    proxy_pass http://127.0.0.1:8080/admin/;
-}
-
-location = /api/ai/chat/stream {
-    proxy_pass http://127.0.0.1:8080/admin/ai/chat/stream;
-    proxy_buffering off;
-    proxy_cache off;
-    proxy_read_timeout 120s;
-}
+```powershell
+cd frontend/admin
+npm run test:unit -- --runInBand --watch=false
 ```
 
-WebSocket 提醒另需匹配前端连接地址与 Upgrade 转发配置。
+RAG 复现见 [评测报告](docs/evaluation/rag-20261021/REPORT.md)，Python 依赖在 [requirements.txt](docs/evaluation/requirements.txt)。复测需要运行中的后端、生效规则、数据库只读查询权限及模型 Key；输出到新目录，并重新逐题复核，不覆盖原始报告或直接沿用旧判分。没有匹配规则快照时，不能把新运行与原 50 题结果直接比较。
 
 ## 验证与实现边界
 
-- 已有本地功能、定向测试与联调记录，覆盖会话归属/终态、规则来源、资料版本过滤、真实存储读回及区间计算等；部分验证由工具辅助。仓库忽略测试目录与 `*Test.java`，不将本地记录描述为已公开的 CI 测试体系。
+2026-10-23 仓库整合检查：
+
+| 检查 | 结果 |
+| --- | --- |
+| JDK 17 + Maven Wrapper 后端打包 | 通过；跳过后端测试 |
+| 管理端从锁文件全新安装、生产构建 | 通过；构建仍有现有资源体积提示 |
+| 前端单元测试 | 5 个测试套件、32 项测试通过 |
+| 新库 SQL 初始化 | 临时数据库验证通过，共 15 张表；演示登录摘要、`turn_id` 和 4 份 PENDING 规则目录符合预期 |
+| Nginx 配置与静态资源 | 配置校验、页面及 17 个构建资源读取通过 |
+| 评测材料完整性 | 题集、原始响应与资料快照的原始哈希保持一致；本轮未重新调用模型评测 |
+
+本轮新库完整启动联调未完成：验证环境的 Milvus 服务不可达。运行时须先确认向量服务与模型配置就绪，不能以构建通过代替完整业务验收。
+
+- 已有本地功能、定向测试与联调记录，覆盖会话归属/终态、规则来源、资料版本过滤、真实存储读回及区间计算等；部分验证由工具辅助。前端单元测试随仓库提供；原后端学习验收测试仍保留在本地忽略目录，不将本地记录描述为已公开的 CI 测试体系。
 - `GET /admin/ai/health` 会实际调用聊天模型，可能产生调用成本。`ragReady` 和 `/rag/ready` 依据生效目录判断，不等于 Embedding、Milvus 和整条问答链路均可用。
 - 聊天开始前的问题长度与归属错误通过 HTTP 响应处理；流式输出后的模型或来源错误通过 SSE `error` 表达，HTTP 200 不代表整轮成功。
 - 当前结构化来源卡片主要通过本轮 `sources` 返回，消息历史未完整保存来源快照，不保证刷新后重现原卡片。
 - 应用突然退出可能遗留 GENERATING，资料导入也未实现分布式任务接管、自动补偿、备份恢复或高可用保障。
 - 固定订单派送分析只解释数据库读取时刻的事实与规则，不修改订单状态，也不执行真实派送。
-- 配套管理端已进行本地业务与 AI 联调；旧小程序和真实支付链路不能由模拟订单或管理端测试推定为已经完整验收。
+- 管理端源码与配置已纳入仓库；当前用户端小程序源码未提供，真实微信登录、支付与退款需要外部账号和证书，不能由模拟订单或管理端测试推定为已经完整验收。

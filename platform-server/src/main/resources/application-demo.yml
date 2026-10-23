@@ -1,0 +1,39 @@
+# Portable profile for a fresh clone. Keep application-local.yml private.
+spring:
+  ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:deepseek}
+
+wzx:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: ${WZX_DATASOURCE_HOST:localhost}
+    port: ${WZX_DATASOURCE_PORT:3306}
+    database: ${WZX_DATASOURCE_DATABASE:wanzhongxiang_platform}
+    username: ${WZX_DATASOURCE_USERNAME}
+    password: ${WZX_DATASOURCE_PASSWORD:}
+  redis:
+    host: ${WZX_REDIS_HOST:localhost}
+    port: ${WZX_REDIS_PORT:6379}
+    password: ${WZX_REDIS_PASSWORD:}
+    database: ${WZX_REDIS_DATABASE:10}
+  ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:deepseek}
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY}
+  alioss:
+    endpoint: ${WZX_OSS_ENDPOINT:oss-cn-beijing.aliyuncs.com}
+    access-key-id: ${WZX_OSS_ACCESS_KEY_ID:NOT_CONFIGURED}
+    access-key-secret: ${WZX_OSS_ACCESS_KEY_SECRET:NOT_CONFIGURED}
+    bucket-name: ${WZX_OSS_BUCKET_NAME:NOT_CONFIGURED}
+  wechat:
+    appid: ${WZX_WECHAT_APPID:NOT_CONFIGURED}
+    secret: ${WZX_WECHAT_SECRET:NOT_CONFIGURED}
+    mchid: ${WZX_WECHAT_MCHID:NOT_CONFIGURED}
+    mch-serial-no: ${WZX_WECHAT_MCH_SERIAL_NO:NOT_CONFIGURED}
+    api-v3-key: ${WZX_WECHAT_API_V3_KEY:NOT_CONFIGURED}
+    private-key-file-path: ${WZX_WECHAT_PRIVATE_KEY_FILE_PATH:}
+    we-chat-pay-cert-file-path: ${WZX_WECHAT_PAY_CERT_FILE_PATH:}
+    notify-url: ${WZX_WECHAT_NOTIFY_URL:}
+    refund-notify-url: ${WZX_WECHAT_REFUND_NOTIFY_URL:}

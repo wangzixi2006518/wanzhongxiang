@@ -1,0 +1,65 @@
+/* Variables */
+
+// Base color
+$mine:#14B8A6;
+$loginBg: #E6FFFB;
+$blue:#2563EB;
+$green: #16A34A;
+$yellow:#F59E0B;
+$pink: #E11D48;
+$block:#0F172A;
+$gray-1: #172033;
+$gray-2: #64748B;
+$gray-3: #94A3B8;
+$gray-4: #CBD5E1;
+$gray-5: #F1F5F9;
+$gray-6: #E2E8F0;
+$bgColor: #F8FAFC;
+$white: #fff;
+
+// Sidebar
+$sideBarWidth: 190px;
+$subMenuBg:#111827;
+$subMenuHover:#1E293B;
+$subMenuActiveText:#f4f4f5;
+$menuBg:#0F172A;
+$menuText:#CBD5E1;
+$menuActiveText:$mine; //Also see settings.sidebarTextTheme
+
+// Login page
+$lightGray: #0F172A;
+$darkGray:#64748B;
+$loginCursorColor: #0F172A;
+
+// The :export directive is the magic sauce for webpack
+// https://mattferderer.com/use-sass-variables-in-typescript-and-javascript
+:export {
+  menuBg: $menuBg;
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+}
+
+.avatar-uploader .el-upload{
+  // border: dashed 2px #D8DDE3 !important;
+  border-radius: 4px !important;
+  background: #FCFCFC;
+}
+.avatar-uploader .avatar-uploader-icon{
+  background: #FCFCFC;
+}
+.avatar-uploader .el-icon-plus:before{
+  content: '上传图片' !important;
+  font-size: 12px;
+  color:#000;
+}
+
+
+// 弹框样式处理
+.el-dialog{
+  border-radius: 8px;
+}
+.el-dialog__header{
+  background: #F8FAFC;
+  border-radius: 8px 8px 0 0;
+  border: none;
+}

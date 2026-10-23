@@ -1,0 +1,165 @@
+{
+  "prepared_at": "2026-10-21T22:37:39.983696+08:00",
+  "application_url": "http://127.0.0.1:8080",
+  "endpoint": "/admin/ai/rag/answer",
+  "evaluation_scope": "standalone RAG endpoint; not SSE tools or conversation memory",
+  "retrieval": {
+    "embedding_model": "text-embedding-v4",
+    "dimensions": 1024,
+    "top_k": 2,
+    "similarity_threshold": 0.5,
+    "metric": "COSINE",
+    "index": "FLAT",
+    "active_filter": "(metadata[\"document_id\"] == \"wx_order_rules\" and metadata[\"version\"] == \"v2-20261009\") or (metadata[\"document_id\"] == \"wx_product_rules\" and metadata[\"version\"] == \"v1-20261009\") or (metadata[\"document_id\"] == \"wx_shop_rules\" and metadata[\"version\"] == \"v1-20261009\") or (metadata[\"document_id\"] == \"wx_statistics_rules\" and metadata[\"version\"] == \"v1-20261009\")",
+    "method": "independent replay via same embedding model and Milvus REST; API citations are checked against replay candidates"
+  },
+  "generation": {
+    "model": "deepseek-chat",
+    "temperature": 0.0,
+    "pipeline": "running Spring RagAnswerService"
+  },
+  "corpus_file_sha256": "87d1656c737c669fccd2086355ad1226885f1dff6f725e65ea82833aa8ff7352",
+  "corpus_count": 18,
+  "document_count": 4,
+  "milvus_schema": {
+    "aliases": [],
+    "autoId": false,
+    "collectionID": 469680151610786976,
+    "collectionName": "wzx_rule_chunks",
+    "consistencyLevel": "Strong",
+    "description": "Spring AI Vector Store",
+    "enableDynamicField": false,
+    "fields": [
+      {
+        "autoId": false,
+        "clusteringKey": false,
+        "description": "",
+        "id": 100,
+        "name": "doc_id",
+        "nullable": false,
+        "params": [
+          {
+            "key": "max_length",
+            "value": "36"
+          }
+        ],
+        "partitionKey": false,
+        "primaryKey": true,
+        "type": "VarChar"
+      },
+      {
+        "autoId": false,
+        "clusteringKey": false,
+        "description": "",
+        "id": 101,
+        "name": "content",
+        "nullable": false,
+        "params": [
+          {
+            "key": "max_length",
+            "value": "65535"
+          }
+        ],
+        "partitionKey": false,
+        "primaryKey": false,
+        "type": "VarChar"
+      },
+      {
+        "autoId": false,
+        "clusteringKey": false,
+        "description": "",
+        "id": 102,
+        "name": "metadata",
+        "nullable": false,
+        "partitionKey": false,
+        "primaryKey": false,
+        "type": "JSON"
+      },
+      {
+        "autoId": false,
+        "clusteringKey": false,
+        "description": "",
+        "id": 103,
+        "name": "embedding",
+        "nullable": false,
+        "params": [
+          {
+            "key": "dim",
+            "value": "1024"
+          }
+        ],
+        "partitionKey": false,
+        "primaryKey": false,
+        "type": "FloatVector"
+      }
+    ],
+    "functions": [],
+    "indexes": [
+      {
+        "fieldName": "embedding",
+        "indexName": "embedding",
+        "metricType": "COSINE"
+      }
+    ],
+    "load": "LoadStateLoaded",
+    "partitionsNum": 1,
+    "properties": [],
+    "shardsNum": 2
+  },
+  "client_os": "Windows-11-10.0.26200-SP0",
+  "client_cpu_logical": 32,
+  "client_python": "3.12.14",
+  "concurrency": 2,
+  "timeout_seconds": 180,
+  "automatic_retries": 0,
+  "dataset_origin": "locally authored from frozen active rules; not an external benchmark",
+  "grading": "prewritten expected points; semantic review by Codex, no independent human review",
+  "dataset_sha256": "2371a70edd756a4a9b41eefd6e3a72b0f80b8922577d7492f61c012368522872",
+  "started_at": "2026-10-21T22:40:22.433097+08:00",
+  "embedding_batches": [
+    {
+      "count": 10,
+      "latency_ms": 297.65,
+      "usage": {
+        "prompt_tokens": 149,
+        "total_tokens": 149
+      }
+    },
+    {
+      "count": 10,
+      "latency_ms": 323.31,
+      "usage": {
+        "prompt_tokens": 165,
+        "total_tokens": 165
+      }
+    },
+    {
+      "count": 10,
+      "latency_ms": 547.44,
+      "usage": {
+        "prompt_tokens": 175,
+        "total_tokens": 175
+      }
+    },
+    {
+      "count": 10,
+      "latency_ms": 276.32,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 202
+      }
+    },
+    {
+      "count": 10,
+      "latency_ms": 423.69,
+      "usage": {
+        "prompt_tokens": 135,
+        "total_tokens": 135
+      }
+    }
+  ],
+  "finished_at": "2026-10-21T22:41:25.085619+08:00",
+  "answer_phase_wall_seconds": 40.92,
+  "catalog_unchanged_after_run": true,
+  "raw_results_sha256": "c2d0a6a1ee6fd52e2d1f4041783e8150c57dd8cfea4fb85aeb31713cd933238b"
+}

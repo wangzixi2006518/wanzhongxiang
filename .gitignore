@@ -9,3 +9,25 @@ platform-server/src/main/resources/application-local.yml
 
 # Local persisted RAG indexes
 **/data/rag/
+
+# Frontend dependencies, build output and local runtime state
+**/node_modules/
+**/dist/
+**/coverage/
+**/.env.local
+**/.env.*.local
+**/npm-debug.log*
+**/yarn-error.log*
+**/report.*.json
+**/__pycache__/
+*.pyc
+*.log
+*.pid
+deploy/nginx/logs/
+.mvn/wrapper/maven-wrapper.jar
+.env
+
+# Private keys and certificates are supplied locally
+*.pem
+*.key
+*.p12

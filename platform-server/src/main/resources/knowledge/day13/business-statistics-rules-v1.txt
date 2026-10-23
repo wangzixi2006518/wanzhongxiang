@@ -1,0 +1,18 @@
+## 营业额与有效订单口径
+当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。
+金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。
+依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。
+
+## 统计时间字段与边界
+当前订单统计SQL使用order_time筛选订单，不是使用delivery_time，也不是支付时间。传入begin时要求order_time大于begin，传入end时要求order_time小于end，两端是严格比较。
+按日营业报表把日期转换为LocalTime.MIN与LocalTime.MAX，再查询当天已完成订单金额；恰好等于端点的时间不满足对应严格比较。不能把当前实现描述成闭区间或左闭右开区间。
+依据：ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。
+
+## 平均客单价与订单完成率
+当前Workspace统计将有效订单数除以总订单数作为订单完成率，将营业额除以有效订单数作为平均客单价。当总订单数或有效订单数为0时，代码保留这两个指标为0.0，避免除零。
+总订单数查询不加已完成状态条件，查询有效订单数时才加入已完成状态条件。订单完成率原始值是比值，不是已经乘以100的百分数。
+依据：WorkspaceServiceImpl.getBusinessData。
+
+## 资料适用范围
+本文是2026-10-09源码实现说明，文档编号wx_statistics_rules，版本v1-20261009。它解释指标计算口径，不包含某日的实时营业额、实际订单笔数或经营变化原因，也不代表正式财务收入确认制度。
+实际数字应调用统计工具，由SQL与Java确定性计算；模型可以结合本规则解释口径，不能从规则文档编造经营数字。本文不提供退款现金流、优惠券及商户结算政策。

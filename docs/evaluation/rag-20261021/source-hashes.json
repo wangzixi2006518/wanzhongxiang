@@ -1,0 +1,5 @@
+{
+  "platform-server/src/main/java/com/wanzhongxiang/rag/RagRetrievalService.java": "ae00d5472d543d72dc9b9fa96c290237045446c3873c5b679ac08dd012de692d",
+  "platform-server/src/main/java/com/wanzhongxiang/rag/RagAnswerService.java": "c87ae1f1e022a61507d136af9c5f6e24c6a14deb841567983f4a0c540fb139f4",
+  "platform-common/src/main/java/com/wanzhongxiang/constant/AiPromptConstant.java": "54ad4ce26a1d954c9bb3d8e0cc2e064b7dfaaaa003a7e002ceb2ca7df02fb919"
+}

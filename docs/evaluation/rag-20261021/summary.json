@@ -1,0 +1,150 @@
+{
+  "generated_at": "2026-10-21T22:50:33.876071+08:00",
+  "sample_size": 50,
+  "answerable_count": 40,
+  "unanswerable_count": 10,
+  "http_success": {
+    "numerator": 50,
+    "denominator": 50,
+    "percent": 100.0
+  },
+  "business_success": {
+    "numerator": 50,
+    "denominator": 50,
+    "percent": 100.0
+  },
+  "hit_at_2_any_gold": {
+    "numerator": 40,
+    "denominator": 40,
+    "percent": 100.0
+  },
+  "complete_evidence_hit_at_2": {
+    "numerator": 37,
+    "denominator": 40,
+    "percent": 92.5
+  },
+  "macro_recall_at_2": {
+    "mean": 0.9625,
+    "percent": 96.25,
+    "question_count": 40
+  },
+  "micro_evidence_recall_at_2": {
+    "numerator": 47,
+    "denominator": 50,
+    "percent": 94.0
+  },
+  "answer_correctness": {
+    "numerator": 37,
+    "denominator": 40,
+    "percent": 92.5
+  },
+  "strict_expected_point_completeness": {
+    "numerator": 36,
+    "denominator": 40,
+    "percent": 90.0
+  },
+  "unanswerable_refusal": {
+    "numerator": 10,
+    "denominator": 10,
+    "percent": 100.0
+  },
+  "false_refusal_on_answerable": {
+    "numerator": 1,
+    "denominator": 40,
+    "percent": 2.5
+  },
+  "overall_question_pass": {
+    "numerator": 47,
+    "denominator": 50,
+    "percent": 94.0
+  },
+  "citation_id_validity": {
+    "numerator": 39,
+    "denominator": 39,
+    "percent": 100.0
+  },
+  "citation_edges": 52,
+  "latency_ms": {
+    "mean": 1605.66,
+    "p50": 1577.04,
+    "p95_nearest_rank": 2293.23,
+    "min": 399.07,
+    "max": 2852.34
+  },
+  "category_metrics": {
+    "direct": {
+      "count": 20,
+      "correct": {
+        "numerator": 20,
+        "denominator": 20,
+        "percent": 100.0
+      },
+      "strict_complete": {
+        "numerator": 20,
+        "denominator": 20,
+        "percent": 100.0
+      }
+    },
+    "paraphrase": {
+      "count": 10,
+      "correct": {
+        "numerator": 10,
+        "denominator": 10,
+        "percent": 100.0
+      },
+      "strict_complete": {
+        "numerator": 10,
+        "denominator": 10,
+        "percent": 100.0
+      }
+    },
+    "multi_evidence": {
+      "count": 10,
+      "correct": {
+        "numerator": 7,
+        "denominator": 10,
+        "percent": 70.0
+      },
+      "strict_complete": {
+        "numerator": 6,
+        "denominator": 10,
+        "percent": 60.0
+      }
+    },
+    "unanswerable": {
+      "count": 10,
+      "correct": {
+        "numerator": 10,
+        "denominator": 10,
+        "percent": 100.0
+      },
+      "strict_complete": {
+        "numerator": 10,
+        "denominator": 10,
+        "percent": 100.0
+      }
+    }
+  },
+  "incorrect_question_ids": [
+    "Q31",
+    "Q39",
+    "Q40"
+  ],
+  "strict_incomplete_ids": [
+    "Q31",
+    "Q32",
+    "Q39",
+    "Q40"
+  ],
+  "reviewer": "Codex semantic review; not independent human review",
+  "annotation_issue": "Q32 expected_points additionally demand completed state and actual-delivery timestamp, but its question asks only the original state required by the two methods. Its answer is question-level correct but fails strict prewritten-point completeness. Original dataset is unchanged; both metrics are reported.",
+  "scope_limits": [
+    "Single locally authored 50-question set over 4 documents/18 chunks; not a general or production benchmark.",
+    "Retrieval candidates independently replayed with same model/dimension/index/filter/threshold; not instrumented inside the live JVM.",
+    "All 52 returned source edges match the corpus and independently retrieved candidates, but this is not semantic support correctness.",
+    "Question-level semantic correctness reviewed by Codex, without independent human review; strict completeness is reported separately.",
+    "Standalone RAG endpoint only; no SSE tool-routing or multi-turn memory evaluation.",
+    "One configuration/run, no before/after optimization claim; latency measured with concurrency 2, not a load test.",
+    "Rules are source-derived snapshot versions from 2026-10-09; statistics boundary questions refer to those rules, not later business-comparison changes."
+  ]
+}

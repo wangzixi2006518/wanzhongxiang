@@ -1,0 +1,2124 @@
+[
+  {
+    "id": "Q01",
+    "category": "direct",
+    "answerable": true,
+    "question": "订单状态1到6分别表示什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1待付款、2待接单、3已接单、4派送中、5已完成、6已取消，映射全部正确"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "六种订单状态映射全部正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "订单状态1到6分别表示：1 待付款、2 待接单、3 已接单、4 派送中、5 已完成、6 已取消。该说明根据源码整理，不代表正式发布的运营制度。【来源：wx_order_rules_v2-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s1_c1",
+        "text": "订单状态与支付状态\n订单状态为：1 待付款、2 待接单、3 已接单、4 派送中、5 已完成、6 已取消。支付状态为：0 未支付、1 已支付、2 退款。订单状态和支付状态属于不同字段，不能把待接单解释为退款。\n依据：Orders.java 的状态常量。本说明根据源码整理，不代表正式发布的运营制度。"
+      }
+    ],
+    "latency_ms": 2256.78,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s7_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q02",
+    "category": "direct",
+    "answerable": true,
+    "question": "支付状态0、1、2分别是什么？它和订单状态是同一个字段吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "0未支付、1已支付、2退款",
+      "支付状态和订单状态是不同字段"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "三种支付状态映射正确，明确区分两个字段。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "支付状态：0 未支付、1 已支付、2 退款。订单状态和支付状态属于不同字段，不能把待接单解释为退款。【来源：wx_order_rules_v2-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s1_c1",
+        "text": "订单状态与支付状态\n订单状态为：1 待付款、2 待接单、3 已接单、4 派送中、5 已完成、6 已取消。支付状态为：0 未支付、1 已支付、2 退款。订单状态和支付状态属于不同字段，不能把待接单解释为退款。\n依据：Orders.java 的状态常量。本说明根据源码整理，不代表正式发布的运营制度。"
+      }
+    ],
+    "latency_ms": 2216.4,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s1_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q03",
+    "category": "direct",
+    "answerable": true,
+    "question": "用户可以取消哪些状态的订单？取消成功后记录什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "待付款或待接单允许，其他四个合法状态不允许",
+      "状态改为已取消并记录用户取消原因及取消时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "允许状态、取消后状态、原因和时间均覆盖。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "用户可取消**待付款**或**待接单**订单；状态大于2（即已接单及之后）会抛出订单状态错误异常。【来源：wx_order_rules_v2-20261009_s2_c1】\n\n取消成功后，订单状态改为**已取消**，并记录**用户取消原因**与**取消时间**。【来源：wx_order_rules_v2-20261009_s2_c1】\n\n补充：待接单订单被取消时，当前实现会将支付状态设置为退款，但外部支付退款调用被注释，不能据此认定资金已实际退回。【来源：wx_order_rules_v2-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s2_c1",
+        "text": "用户取消订单\n在当前六种合法订单状态范围内，用户取消方法允许取消待付款或待接单订单。方法先查询订单；不存在时抛出订单不存在异常，状态大于2时抛出订单状态错误异常。成功时把订单状态改为已取消，并记录用户取消原因与取消时间。\n待接单订单被用户取消时，代码将支付状态设置为退款；外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。\n依据：OrderServiceImpl.userCancelById。"
+      }
+    ],
+    "latency_ms": 1760.49,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q04",
+    "category": "direct",
+    "answerable": true,
+    "question": "用户取消待接单订单时，代码是否能证明支付渠道已经退回资金？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "将支付状态设置为退款",
+      "外部退款调用被注释，不能证明实际到账"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "区分退款标记与渠道到账，明确外部调用被注释。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不能。待接单订单被用户取消时，代码只是把支付状态设置为“退款”，但外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。【来源：wx_order_rules_v2-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s2_c1",
+        "text": "用户取消订单\n在当前六种合法订单状态范围内，用户取消方法允许取消待付款或待接单订单。方法先查询订单；不存在时抛出订单不存在异常，状态大于2时抛出订单状态错误异常。成功时把订单状态改为已取消，并记录用户取消原因与取消时间。\n待接单订单被用户取消时，代码将支付状态设置为退款；外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。\n依据：OrderServiceImpl.userCancelById。"
+      }
+    ],
+    "latency_ms": 1587.01,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q05",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前管理端接单方法有没有先查询订单并校验原状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "没有先查询并校验原状态",
+      "按传入订单ID直接更新为已接单"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确说明接单按ID直接更新且缺少原状态校验。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "没有。当前管理端接单方法根据传入的订单ID直接把订单状态更新为已接单，自身没有先查询订单并校验原状态，因此不能把“只允许待接单订单接单”视为该方法已实现的保护。【来源：wx_order_rules_v2-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s3_c1",
+        "text": "管理端接单\n当前接单方法根据传入的订单ID，把订单状态更新为已接单。该方法自身没有先查询订单并校验原状态，不能把“只允许待接单订单接单”写成这里已经实现的保护。\n这一段描述当前代码行为，不建议对任意状态订单执行接单，也不表示更新一定影响了数据库行。规则查询只解释资料，不执行接单。\n依据：OrderServiceImpl.confirm。"
+      }
+    ],
+    "latency_ms": 1585.41,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s3_c1",
+      "wx_order_rules_v2-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q06",
+    "category": "direct",
+    "answerable": true,
+    "question": "管理端拒单需要满足什么条件，成功后更新哪些信息？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且为待接单",
+      "改已取消并记录拒单原因、取消时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "存在性、待接单前提及取消后原因时间均正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "管理端拒单需要满足：订单存在且订单状态为“待接单”，否则会抛出订单状态错误异常。成功后会把订单状态改为“已取消”，并记录拒单原因与取消时间；已支付订单还会记录申请退款日志，但外部支付退款调用被注释，不能把日志视为退款到账证明。【来源：wx_order_rules_v2-20261009_s4_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s4_c1",
+        "text": "管理端拒单\n拒单方法要求订单存在且订单状态为待接单，否则抛出订单状态错误异常。成功时把订单状态改为已取消，并记录拒单原因与取消时间。\n已支付订单会记录申请退款日志，但外部支付退款调用被注释，不能把日志写成退款到账证明。\n依据：OrderServiceImpl.rejection。"
+      }
+    ],
+    "latency_ms": 1695.91,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s3_c1",
+      "wx_order_rules_v2-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q07",
+    "category": "direct",
+    "answerable": true,
+    "question": "开始派送要求订单是什么状态，成功后变成什么状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且已接单",
+      "从已接单变为派送中"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "存在且已接单的前提及转为派送中均正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "开始派送要求订单存在且状态为“已接单”；校验通过后，订单状态从“已接单”变为“派送中”。待付款、待接单、派送中、已完成和已取消的订单不符合状态前提。【来源：wx_order_rules_v2-20261009_s5_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s5_c1",
+        "text": "开始派送\n开始派送要求订单存在且订单状态为已接单。待付款、待接单、派送中、已完成和已取消的订单不符合该方法的状态前提。\n校验通过后，订单状态从已接单变为派送中。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.delivery。"
+      }
+    ],
+    "latency_ms": 1391.06,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s5_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q08",
+    "category": "direct",
+    "answerable": true,
+    "question": "完成订单需要满足什么条件，会记录什么时间？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且派送中",
+      "改已完成并记录实际送达时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "存在且派送中、变为已完成、实际送达时间均覆盖。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "完成订单需要满足两个条件：订单存在，且订单状态为“派送中”。校验通过后，订单状态从“派送中”变为“已完成”，并记录实际送达时间；订单不存在或状态不符合时，会抛出订单状态错误异常。【来源：wx_order_rules_v2-20261009_s6_c1】\n\n以上为当前源码实现说明，并非正式运营制度。【来源：wx_order_rules_v2-20261009_s7_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s6_c1",
+        "text": "完成订单\n完成订单要求订单存在且订单状态为派送中。校验通过后，订单状态从派送中变为已完成，并记录实际送达时间。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.complete。"
+      },
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s7_c1",
+        "text": "资料适用范围\n本资料是2026-10-09核对源码后整理的实现说明，文档编号wx_order_rules，版本v2-20261009。它没有列举所有订单操作，未覆盖管理端取消、优惠券、结算周期及退款到账时限。不能从部分方法推断某状态只能进行这些操作。\n某笔订单的当前状态、当前订单数量和经营金额必须另查业务数据。源码或说明正文变化后，需要使用新文档版本并更新索引。"
+      }
+    ],
+    "latency_ms": 1963.3,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s6_c1",
+      "wx_order_rules_v2-20261009_s7_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q09",
+    "category": "direct",
+    "answerable": true,
+    "question": "门店状态1和0分别表示什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1营业中、0打烊中"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "1营业中、0打烊中正确且不冒充实时状态。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "门店状态1表示营业中，0表示打烊中。该说明仅解释状态含义，不能据此认定门店当前实际营业或已打烊。【来源：wx_shop_rules_v1-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s1_c1",
+        "text": "门店营业状态含义\n当前门店状态接口用1表示营业中，用0表示打烊中。这里解释状态含义，不能据此认定门店现在营业或已经打烊。\n依据：admin.ShopController.setStatus、getStatus 中的状态说明。"
+      }
+    ],
+    "latency_ms": 1330.42,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s1_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q10",
+    "category": "direct",
+    "answerable": true,
+    "question": "门店营业状态存放在哪里，管理端如何读取？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "Redis固定键SHOP_STATUS",
+      "设置写入该键，读取从同一键获取"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "明确Redis固定键SHOP_STATUS及同键读写。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "门店营业状态存放在 Redis 键 `SHOP_STATUS` 中；管理端读取时从同一键获取当前值。【来源：wx_shop_rules_v1-20261009_s2_c1】\n\n这是当前实现说明：设置状态时写入该键，读取状态时从该键取值；且当前接口使用固定键，不声称已实现按多门店分别存储。【来源：wx_shop_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s2_c1",
+        "text": "门店状态存储与读取\n管理端设置门店状态时，将传入状态写入Redis键SHOP_STATUS；读取门店状态时，从同一键获取当前值。\n规则文档仅描述这个存取方式。门店当前状态需要实时读取，不能从规则文本、模型记忆或历史回答恢复。当前接口使用固定键，不声称已实现按多门店分别存储。\n依据：admin.ShopController.setStatus、getStatus。"
+      }
+    ],
+    "latency_ms": 1833.3,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q11",
+    "category": "direct",
+    "answerable": true,
+    "question": "要判断门店现在是否营业，可以直接用规则文本中的状态说明吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "不可以",
+      "需要实时读取Redis中的当前状态，不能依赖规则或历史回答"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "拒绝从规则推断当前营业状态，说明必须实时读取。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不可以。规则文本只解释状态含义（1表示营业中、0表示打烊中），并明确“不能据此认定门店现在营业或已经打烊”；门店当前状态需要实时读取，不能从规则文本、模型记忆或历史回答恢复。【来源：wx_shop_rules_v1-20261009_s1_c1】【来源：wx_shop_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s1_c1",
+        "text": "门店营业状态含义\n当前门店状态接口用1表示营业中，用0表示打烊中。这里解释状态含义，不能据此认定门店现在营业或已经打烊。\n依据：admin.ShopController.setStatus、getStatus 中的状态说明。"
+      },
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s2_c1",
+        "text": "门店状态存储与读取\n管理端设置门店状态时，将传入状态写入Redis键SHOP_STATUS；读取门店状态时，从同一键获取当前值。\n规则文档仅描述这个存取方式。门店当前状态需要实时读取，不能从规则文本、模型记忆或历史回答恢复。当前接口使用固定键，不声称已实现按多门店分别存储。\n依据：admin.ShopController.setStatus、getStatus。"
+      }
+    ],
+    "latency_ms": 1839.65,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q12",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品和组合商品的启售、停售分别用哪个状态值表示？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1启售/启用，0停售/禁用"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "启用/启售为1、禁用/停售为0。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "商品和组合商品的启售、停售状态值：**1 表示启用（启售），0 表示禁用（停售）**。\n\n依据：当前状态常量规定 1 为启用、0 为禁用，商品及组合商品使用这两个值表达启售和停售。【来源：wx_product_rules_v1-20261009_s1_c1】\n\n说明：这是源码实现说明，不代表某一商品当前实际在售状态，具体状态需查询业务数据库。",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s1_c1",
+        "text": "商品启售停售状态\n当前状态常量规定1为启用、0为禁用，商品及组合商品使用这两个值表达启售和停售。\n资料性质为源码实现说明，不能据此推断某一商品现在正在销售，其当前状态需要查询业务数据库。\n依据：StatusConstant.ENABLE、StatusConstant.DISABLE。"
+      }
+    ],
+    "latency_ms": 1854.4,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s1_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q13",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品批量删除前有哪些业务限制，校验通过后删除哪些数据？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "启售中拒绝删除、存在组合商品关联拒绝删除",
+      "通过后删除商品及规格数据"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "在售与关联两项限制及商品规格删除均覆盖。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "商品批量删除前有两项业务限制：先检查指定商品状态，存在启售中的商品时拒绝删除；再查询这些商品是否与组合商品关联，存在关联时拒绝删除。校验通过后，删除商品数据及对应规格数据。【来源：wx_product_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s2_c1",
+        "text": "商品删除限制\n商品批量删除方法先检查指定商品的状态，存在启售中的商品时拒绝删除；随后查询这些商品是否与组合商品关联，存在关联时拒绝删除。\n这些检查通过后，删除商品数据及对应规格数据。此说明描述指定商品存在且相关读取成功时的流程，不代表方法已经覆盖任意非法ID或并发状态变化。\n依据：DishServiceImpl.deleteBatch。"
+      }
+    ],
+    "latency_ms": 1603.53,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s2_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q14",
+    "category": "direct",
+    "answerable": true,
+    "question": "停售一个商品会对包含它的组合商品产生什么影响？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "关联组合商品也改为停售",
+      "该状态联动方法使用Spring事务"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "联动关联组合商品停售，说明Spring事务。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "停售一个商品时，当前实现会查询包含该商品的组合商品，并将这些组合商品也改为停售；该联动方法使用Spring事务。但商品重新启售后不会自动恢复相关组合商品的启售状态。【来源：wx_product_rules_v1-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s3_c1",
+        "text": "商品停售与组合商品联动\n商品启售停售方法先更新商品状态。执行停售时，如果查询到包含该商品的组合商品，代码会把这些组合商品也改为停售。\n该方法没有实现商品重新启售后自动恢复相关组合商品启售的对称操作，不能由停售联动推断自动恢复。整个商品状态联动方法使用Spring事务。\n依据：DishServiceImpl.startOrStop。"
+      }
+    ],
+    "latency_ms": 1773.35,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s3_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q15",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品重新启售后，会自动恢复关联组合商品的启售状态吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会，当前没有实现这种对称自动恢复"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "明确重新启售不会自动恢复组合商品。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不会自动恢复。当前实现中，商品启售停售方法只实现了停售时联动停售关联组合商品，没有实现商品重新启售后自动恢复相关组合商品启售的对称操作。【来源：wx_product_rules_v1-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s3_c1",
+        "text": "商品停售与组合商品联动\n商品启售停售方法先更新商品状态。执行停售时，如果查询到包含该商品的组合商品，代码会把这些组合商品也改为停售。\n该方法没有实现商品重新启售后自动恢复相关组合商品启售的对称操作，不能由停售联动推断自动恢复。整个商品状态联动方法使用Spring事务。\n依据：DishServiceImpl.startOrStop。"
+      }
+    ],
+    "latency_ms": 2205.73,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s3_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q16",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前组合商品启售方法是否检查关联商品全部启售？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "按ID直接更新组合商品状态",
+      "没有检查关联商品是否全部启售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "明确直接按ID更新且没有关联商品全部启售校验。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前实现不检查关联商品是否全部启售。组合商品启售停售方法按ID直接更新组合商品状态，该方法自身未检查关联商品是否全部启售，不能声称该保护已经实现。【来源：wx_product_rules_v1-20261009_s4_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s4_c1",
+        "text": "组合商品状态更新与资料范围\n当前组合商品启售停售方法按ID直接更新组合商品状态；该方法自身未检查关联商品是否全部启售，不能声称该保护已经实现。\n本文是2026-10-09源码实现说明，文档编号wx_product_rules，版本v1-20261009，不包含库存扣减、折扣、优惠券及所有删除边界。查询规则不执行启售、停售或删除。\n依据：SetmealServiceImpl.startOrStop。"
+      }
+    ],
+    "latency_ms": 1439.48,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s3_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q17",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前营业统计中的营业额和有效订单数是什么口径？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "已完成订单金额合计作为营业额",
+      "已完成订单数量作为有效订单数，其他状态不计入"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "已完成订单金额与数量口径均正确，排除其他状态。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前营业统计中，营业额为订单状态是“已完成”的订单金额合计，有效订单数为这些已完成订单的数量；待付款、待接单、已接单、派送中和已取消订单均不计入这两个指标。金额合计查询返回null时，Service会转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。【来源：wx_statistics_rules_v1-20261009_s1_c1】\n\n该口径是2026-10-09源码实现说明，不代表正式财务收入确认制度，也不提供实时营业额或实际订单笔数。【来源：wx_statistics_rules_v1-20261009_s4_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      },
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s4_c1",
+        "text": "资料适用范围\n本文是2026-10-09源码实现说明，文档编号wx_statistics_rules，版本v1-20261009。它解释指标计算口径，不包含某日的实时营业额、实际订单笔数或经营变化原因，也不代表正式财务收入确认制度。\n实际数字应调用统计工具，由SQL与Java确定性计算；模型可以结合本规则解释口径，不能从规则文档编造经营数字。本文不提供退款现金流、优惠券及商户结算政策。"
+      }
+    ],
+    "latency_ms": 2293.23,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q18",
+    "category": "direct",
+    "answerable": true,
+    "question": "这份统计实现说明使用哪个时间字段，begin和end边界如何比较？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "使用order_time而非delivery_time或支付时间",
+      "order_time > begin 且 order_time < end，两端严格比较"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "按冻结说明回答order_time及两端严格比较；不拿后续区间对比接口口径替代本文。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前实现使用 order_time 筛选订单，不使用 delivery_time 或支付时间。传入 begin 时要求 order_time 大于 begin，传入 end 时要求 order_time 小于 end，两端均为严格比较；恰好等于端点的时间不满足对应比较，因此不能描述为闭区间或左闭右开区间。按日营业报表会把日期转换为 LocalTime.MIN 与 LocalTime.MAX 后查询当天已完成订单金额。【来源：wx_statistics_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s2_c1",
+        "text": "统计时间字段与边界\n当前订单统计SQL使用order_time筛选订单，不是使用delivery_time，也不是支付时间。传入begin时要求order_time大于begin，传入end时要求order_time小于end，两端是严格比较。\n按日营业报表把日期转换为LocalTime.MIN与LocalTime.MAX，再查询当天已完成订单金额；恰好等于端点的时间不满足对应严格比较。不能把当前实现描述成闭区间或左闭右开区间。\n依据：ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 2480.11,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s2_c1",
+      "wx_statistics_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q19",
+    "category": "direct",
+    "answerable": true,
+    "question": "平均客单价如何计算，有效订单数为0时是多少？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "营业额除以有效订单数",
+      "有效订单数为0时保留0.0避免除零"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "营业额除有效订单数，零基数保留0.0。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "平均客单价按“营业额除以有效订单数”计算；当有效订单数为0时，当前实现将该指标保留为0.0，以避免除零。【来源：wx_statistics_rules_v1-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s3_c1",
+        "text": "平均客单价与订单完成率\n当前Workspace统计将有效订单数除以总订单数作为订单完成率，将营业额除以有效订单数作为平均客单价。当总订单数或有效订单数为0时，代码保留这两个指标为0.0，避免除零。\n总订单数查询不加已完成状态条件，查询有效订单数时才加入已完成状态条件。订单完成率原始值是比值，不是已经乘以100的百分数。\n依据：WorkspaceServiceImpl.getBusinessData。"
+      }
+    ],
+    "latency_ms": 2852.34,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q20",
+    "category": "direct",
+    "answerable": true,
+    "question": "订单完成率如何计算，返回值是不是已经乘以100的百分数？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "有效订单数除以总订单数，总数不限制已完成状态",
+      "返回比值而非已乘100；总订单数为0时为0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "完成率、总数范围、零基数和比值口径均正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "订单完成率的计算方式是：有效订单数 ÷ 总订单数。其中总订单数查询不加已完成状态条件，有效订单数才加入已完成状态条件；当总订单数或有效订单数为0时，该指标保留为0.0，避免除零。\n\n返回值不是已经乘以100的百分数，而是原始比值。【来源：wx_statistics_rules_v1-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s3_c1",
+        "text": "平均客单价与订单完成率\n当前Workspace统计将有效订单数除以总订单数作为订单完成率，将营业额除以有效订单数作为平均客单价。当总订单数或有效订单数为0时，代码保留这两个指标为0.0，避免除零。\n总订单数查询不加已完成状态条件，查询有效订单数时才加入已完成状态条件。订单完成率原始值是比值，不是已经乘以100的百分数。\n依据：WorkspaceServiceImpl.getBusinessData。"
+      }
+    ],
+    "latency_ms": 2022.84,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q21",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "订单已经被商家接下了，买家还能走用户取消接口撤销吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "已接单状态3不能用户取消",
+      "用户取消仅支持待付款或待接单"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒绝已接单订单走用户取消，说明允许的两个状态。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不能。当前实现中，用户取消接口只允许取消待付款或待接单订单；订单已被商家接下后，状态大于2时会抛出订单状态错误异常，因此不能走用户取消接口撤销。【来源：wx_order_rules_v2-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s2_c1",
+        "text": "用户取消订单\n在当前六种合法订单状态范围内，用户取消方法允许取消待付款或待接单订单。方法先查询订单；不存在时抛出订单不存在异常，状态大于2时抛出订单状态错误异常。成功时把订单状态改为已取消，并记录用户取消原因与取消时间。\n待接单订单被用户取消时，代码将支付状态设置为退款；外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。\n依据：OrderServiceImpl.userCancelById。"
+      }
+    ],
+    "latency_ms": 1555.55,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s2_c1",
+      "wx_order_rules_v2-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q22",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "骑手都在送货了，管理端还能把这笔单当作拒单来处理吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能",
+      "拒单要求待接单，派送中不满足"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确区分派送中与待接单，拒单不允许派送中。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不允许。当前实现要求管理端拒单时订单状态必须为“待接单”，骑手已在送货说明订单处于“派送中”，不满足拒单条件，会抛出订单状态错误异常。【来源：wx_order_rules_v2-20261009_s4_c1】订单状态中“4 派送中”与“2 待接单”是不同状态。【来源：wx_order_rules_v2-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s4_c1",
+        "text": "管理端拒单\n拒单方法要求订单存在且订单状态为待接单，否则抛出订单状态错误异常。成功时把订单状态改为已取消，并记录拒单原因与取消时间。\n已支付订单会记录申请退款日志，但外部支付退款调用被注释，不能把日志写成退款到账证明。\n依据：OrderServiceImpl.rejection。"
+      },
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s1_c1",
+        "text": "订单状态与支付状态\n订单状态为：1 待付款、2 待接单、3 已接单、4 派送中、5 已完成、6 已取消。支付状态为：0 未支付、1 已支付、2 退款。订单状态和支付状态属于不同字段，不能把待接单解释为退款。\n依据：Orders.java 的状态常量。本说明根据源码整理，不代表正式发布的运营制度。"
+      }
+    ],
+    "latency_ms": 1577.4,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q23",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "还没接单就点开始配送，当前代码会放行吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会",
+      "开始派送要求订单存在且已接单，待接单不满足"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "未接单不能开始派送，已接单为必要前提。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不会放行。当前实现要求“开始派送”时订单状态必须为已接单；待接单等状态不符合前提，会抛出订单状态错误异常。【来源：wx_order_rules_v2-20261009_s5_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s5_c1",
+        "text": "开始派送\n开始派送要求订单存在且订单状态为已接单。待付款、待接单、派送中、已完成和已取消的订单不符合该方法的状态前提。\n校验通过后，订单状态从已接单变为派送中。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.delivery。"
+      }
+    ],
+    "latency_ms": 1460.77,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s5_c1",
+      "wx_order_rules_v2-20261009_s6_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q24",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "订单刚接下来还没进入配送，可以直接点完成吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "不可以",
+      "完成要求派送中，不满足时抛订单状态错误"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "已接单但未派送不能完成，说明派送中前提和异常。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不可以。当前实现要求完成订单时订单状态必须为“派送中”，刚接下但未进入配送的订单不满足该条件，会抛出订单状态错误异常。【来源：wx_order_rules_v2-20261009_s6_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s6_c1",
+        "text": "完成订单\n完成订单要求订单存在且订单状态为派送中。校验通过后，订单状态从派送中变为已完成，并记录实际送达时间。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.complete。"
+      }
+    ],
+    "latency_ms": 1373.06,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s6_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q25",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "商品还挂在售卖页面上，后台能直接批量删掉吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "启售状态拒绝删除",
+      "需先满足非启售等删除检查"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "启售拒绝删除，并提醒关联检查。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不可以直接批量删除。当前实现会先检查商品状态，存在“启售中”的商品时拒绝删除；即使状态检查通过，若商品与组合商品关联，也会拒绝删除。【来源：wx_product_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s2_c1",
+        "text": "商品删除限制\n商品批量删除方法先检查指定商品的状态，存在启售中的商品时拒绝删除；随后查询这些商品是否与组合商品关联，存在关联时拒绝删除。\n这些检查通过后，删除商品数据及对应规格数据。此说明描述指定商品存在且相关读取成功时的流程，不代表方法已经覆盖任意非法ID或并发状态变化。\n依据：DishServiceImpl.deleteBatch。"
+      }
+    ],
+    "latency_ms": 1392.13,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s2_c1",
+      "wx_product_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q26",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "一个已经下架的单品仍被套餐引用，能直接删除这个单品吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能",
+      "存在组合商品关联时拒绝删除，下架不代表检查全部通过"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "下架不绕过关联限制，仍被套餐引用不能删除。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不能直接删除。当前实现中，商品批量删除会先检查商品状态，存在启售中的商品时拒绝删除；随后还会查询这些商品是否与组合商品关联，存在关联时拒绝删除。因此，单品即使已下架，只要仍被套餐（组合商品）引用，就会因关联检查不通过而被拒绝删除。【来源：wx_product_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s2_c1",
+        "text": "商品删除限制\n商品批量删除方法先检查指定商品的状态，存在启售中的商品时拒绝删除；随后查询这些商品是否与组合商品关联，存在关联时拒绝删除。\n这些检查通过后，删除商品数据及对应规格数据。此说明描述指定商品存在且相关读取成功时的流程，不代表方法已经覆盖任意非法ID或并发状态变化。\n依据：DishServiceImpl.deleteBatch。"
+      }
+    ],
+    "latency_ms": 1589.01,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s2_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q27",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "顾客付过钱但订单还没送完，这笔钱会算进当前已完成口径的营业额吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "不计入",
+      "营业额口径要求订单状态已完成，付款不等于完成"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "付款但未完成不计入已完成口径，引用正确统计规则。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不会。当前营业统计只把“已完成”状态订单的金额计入营业额；顾客已付款但订单仍在派送中，属于“派送中”，明确不计入已完成口径。原文：“当前营业统计以订单状态为已完成的订单金额合计作为营业额……待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。”【来源：wx_statistics_rules_v1-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 1718.91,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q28",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "查出来营业额是零，就能断定一个有效订单都没有吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能仅凭金额0判断",
+      "应同时查看有效订单数"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "金额为零不能推断有效订单为零，需要同时看数量。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不能。当前实现中，金额合计查询返回 null 时会转换为 0.0，因此营业额为 0.0 不能单独证明没有有效订单，应同时查看有效订单数。【来源：wx_statistics_rules_v1-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 1762.78,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q29",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "今天没有任何已完成订单时，工作台的客单价会算崩吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会除零",
+      "有效订单数为0时客单价保留0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "有效订单为零保留客单价0.0并避免除零。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不会算崩。当前实现中，当有效订单数为0时，平均客单价保留为0.0，避免除零。【来源：wx_statistics_rules_v1-20261009_s3_c1】\n\n同时，今天没有已完成订单意味着有效订单数为0，营业额也为0.0；金额合计查询返回null时也会转换为0.0。【来源：wx_statistics_rules_v1-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s3_c1",
+        "text": "平均客单价与订单完成率\n当前Workspace统计将有效订单数除以总订单数作为订单完成率，将营业额除以有效订单数作为平均客单价。当总订单数或有效订单数为0时，代码保留这两个指标为0.0，避免除零。\n总订单数查询不加已完成状态条件，查询有效订单数时才加入已完成状态条件。订单完成率原始值是比值，不是已经乘以100的百分数。\n依据：WorkspaceServiceImpl.getBusinessData。"
+      },
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 1568.84,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q30",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "Redis里没有保存门店营业标记，接口一定会当作打烊返回0吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能保证",
+      "资料没有保证缺键一定返回0，不能推断默认行为"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "整体结论是不保证缺键返回0，没有把未知默认行为当作已知。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "不会。当前实现说明明确“不保证Redis缺少该键时一定返回0”，因此不能据此认定接口一定会当作打烊返回0。【来源：wx_shop_rules_v1-20261009_s3_c1】",
+    "sources": [
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s3_c1",
+        "text": "资料适用范围\n本文是2026-10-09源码实现说明，文档编号wx_shop_rules，版本v1-20261009。它不包含完整营业时段制度、节假日安排或营业状态对下单的全部影响。\n资料不证明任意状态参数均经过校验，不保证Redis缺少该键时一定返回0。规则问答不执行营业状态修改。"
+      }
+    ],
+    "latency_ms": 1477.83,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 1,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q31",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "用户取消和管理端拒单在允许的原订单状态上有什么不同？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "用户取消允许待付款和待接单",
+      "管理端拒单只允许待接单且要求订单存在"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": false,
+    "strict_complete": false,
+    "reason": "漏检用户取消章节。开头错误声称用户取消和拒单都仅限待接单，随后又称无法确认，既错误又自相矛盾。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "用户取消和管理端拒单在允许的原订单状态上**没有不同**：两者都只允许在订单状态为“待接单”时操作。\n\n- 管理端拒单：要求订单存在且状态为待接单，否则抛出订单状态错误异常【来源：wx_order_rules_v2-20261009_s4_c1】。\n- 用户取消：本轮资料未提供用户取消的规则片段，无法确认其允许状态。\n\n因此，仅就现有资料，只能确认管理端拒单要求“待接单”；用户取消的允许状态资料不足，不能据此断言两者相同或不同。",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s4_c1",
+        "text": "管理端拒单\n拒单方法要求订单存在且订单状态为待接单，否则抛出订单状态错误异常。成功时把订单状态改为已取消，并记录拒单原因与取消时间。\n已支付订单会记录申请退款日志，但外部支付退款调用被注释，不能把日志写成退款到账证明。\n依据：OrderServiceImpl.rejection。"
+      }
+    ],
+    "latency_ms": 1846.57,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": false,
+    "recall_at_2": 0.5,
+    "refused": false
+  },
+  {
+    "id": "Q32",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "订单从已接单到完成，开始派送和完成两个方法各自要求什么原状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "开始派送要求已接单并更新为派送中",
+      "完成要求派送中并更新已完成、记录实际送达时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": false,
+    "reason": "准确回答题干询问的两个原状态；未写标注额外要求的完成后状态及实际送达时间，故严格要点完整性不通过。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "开始派送要求订单存在且状态为已接单；完成订单要求订单存在且状态为派送中。【来源：wx_order_rules_v2-20261009_s5_c1】【来源：wx_order_rules_v2-20261009_s6_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s5_c1",
+        "text": "开始派送\n开始派送要求订单存在且订单状态为已接单。待付款、待接单、派送中、已完成和已取消的订单不符合该方法的状态前提。\n校验通过后，订单状态从已接单变为派送中。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.delivery。"
+      },
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s6_c1",
+        "text": "完成订单\n完成订单要求订单存在且订单状态为派送中。校验通过后，订单状态从派送中变为已完成，并记录实际送达时间。订单不存在或状态不符合时抛出订单状态错误异常。\n依据：OrderServiceImpl.complete。"
+      }
+    ],
+    "latency_ms": 1274.68,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s5_c1",
+      "wx_order_rules_v2-20261009_s6_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q33",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "待接单订单被用户取消后，订单状态和支付状态分别是什么？能证明退款到账吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单状态6已取消、支付状态2退款",
+      "退款调用被注释，不能证明渠道到账"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "取消后订单6、支付2映射正确且不宣称退款实际到账。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "待接单订单被用户取消后，订单状态改为“已取消”（6），支付状态设置为“退款”（2）。但这不能证明退款已实际到账：当前实现中外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。【来源：wx_order_rules_v2-20261009_s2_c1】\n\n另需注意，订单状态与支付状态是不同字段，不能把“待接单”解释为退款。【来源：wx_order_rules_v2-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s2_c1",
+        "text": "用户取消订单\n在当前六种合法订单状态范围内，用户取消方法允许取消待付款或待接单订单。方法先查询订单；不存在时抛出订单不存在异常，状态大于2时抛出订单状态错误异常。成功时把订单状态改为已取消，并记录用户取消原因与取消时间。\n待接单订单被用户取消时，代码将支付状态设置为退款；外部支付退款调用被注释，因此不能据此认定支付渠道已经实际退回资金。\n依据：OrderServiceImpl.userCancelById。"
+      },
+      {
+        "documentId": "wx_order_rules",
+        "documentTitle": "万众享订单处理规则说明",
+        "version": "v2-20261009",
+        "chunkId": "wx_order_rules_v2-20261009_s1_c1",
+        "text": "订单状态与支付状态\n订单状态为：1 待付款、2 待接单、3 已接单、4 派送中、5 已完成、6 已取消。支付状态为：0 未支付、1 已支付、2 退款。订单状态和支付状态属于不同字段，不能把待接单解释为退款。\n依据：Orders.java 的状态常量。本说明根据源码整理，不代表正式发布的运营制度。"
+      }
+    ],
+    "latency_ms": 1496.82,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q34",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品停售与商品删除对关联组合商品分别如何处理？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "停售会联动关联组合商品停售",
+      "删除遇到组合商品关联会拒绝，不是连带删除组合商品"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "明确停售联动与有组合关联时删除被拒绝的区别。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "商品停售时，会联动将包含该商品的组合商品也改为停售；但商品重新启售后不会自动恢复相关组合商品的启售状态。商品删除时，若商品与组合商品存在关联，则拒绝删除。【来源：wx_product_rules_v1-20261009_s3_c1】【来源：wx_product_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s3_c1",
+        "text": "商品停售与组合商品联动\n商品启售停售方法先更新商品状态。执行停售时，如果查询到包含该商品的组合商品，代码会把这些组合商品也改为停售。\n该方法没有实现商品重新启售后自动恢复相关组合商品启售的对称操作，不能由停售联动推断自动恢复。整个商品状态联动方法使用Spring事务。\n依据：DishServiceImpl.startOrStop。"
+      },
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s2_c1",
+        "text": "商品删除限制\n商品批量删除方法先检查指定商品的状态，存在启售中的商品时拒绝删除；随后查询这些商品是否与组合商品关联，存在关联时拒绝删除。\n这些检查通过后，删除商品数据及对应规格数据。此说明描述指定商品存在且相关读取成功时的流程，不代表方法已经覆盖任意非法ID或并发状态变化。\n依据：DishServiceImpl.deleteBatch。"
+      }
+    ],
+    "latency_ms": 1758.91,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s2_c1",
+      "wx_product_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q35",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品停售后再启售会自动恢复套餐吗？直接启售套餐会校验全部关联商品吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "重新启售商品不会自动恢复关联组合商品",
+      "直接启售组合商品方法没有校验关联商品是否全部启售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "重新启售不自动恢复套餐、直接启售套餐不检查全部关联商品均正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "商品停售后再启售不会自动恢复套餐。当前实现中，商品启售停售方法在停售时会联动将包含该商品的组合商品改为停售，但没有实现商品重新启售后自动恢复相关组合商品启售的对称操作。【来源：wx_product_rules_v1-20261009_s3_c1】\n\n直接启售套餐不会校验全部关联商品。当前组合商品启售停售方法按ID直接更新组合商品状态，该方法自身未检查关联商品是否全部启售，不能声称该保护已经实现。【来源：wx_product_rules_v1-20261009_s4_c1】\n\n以上为当前源码实现说明，非正式运营制度。",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s3_c1",
+        "text": "商品停售与组合商品联动\n商品启售停售方法先更新商品状态。执行停售时，如果查询到包含该商品的组合商品，代码会把这些组合商品也改为停售。\n该方法没有实现商品重新启售后自动恢复相关组合商品启售的对称操作，不能由停售联动推断自动恢复。整个商品状态联动方法使用Spring事务。\n依据：DishServiceImpl.startOrStop。"
+      },
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s4_c1",
+        "text": "组合商品状态更新与资料范围\n当前组合商品启售停售方法按ID直接更新组合商品状态；该方法自身未检查关联商品是否全部启售，不能声称该保护已经实现。\n本文是2026-10-09源码实现说明，文档编号wx_product_rules，版本v1-20261009，不包含库存扣减、折扣、优惠券及所有删除边界。查询规则不执行启售、停售或删除。\n依据：SetmealServiceImpl.startOrStop。"
+      }
+    ],
+    "latency_ms": 1521.78,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s3_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q36",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "按这份统计实现说明，营业额筛选使用什么订单状态和时间字段，时间边界包含端点吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_statistics_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "筛选已完成订单并合计金额",
+      "时间字段order_time，begin/end两端严格比较、不包含端点"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "已完成口径与order_time严格比较两组依据均覆盖。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "按当前实现说明，营业额筛选使用订单状态为“已完成”的订单，时间字段使用 `order_time`，不使用 `delivery_time` 或支付时间；时间边界为严格比较，`order_time` 必须大于 `begin` 且小于 `end`，端点本身不包含。【来源：wx_statistics_rules_v1-20261009_s1_c1】【来源：wx_statistics_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      },
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s2_c1",
+        "text": "统计时间字段与边界\n当前订单统计SQL使用order_time筛选订单，不是使用delivery_time，也不是支付时间。传入begin时要求order_time大于begin，传入end时要求order_time小于end，两端是严格比较。\n按日营业报表把日期转换为LocalTime.MIN与LocalTime.MAX，再查询当天已完成订单金额；恰好等于端点的时间不满足对应严格比较。不能把当前实现描述成闭区间或左闭右开区间。\n依据：ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 1558.19,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q37",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "有效订单数和总订单数的筛选条件有何区别，完成率如何得到？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "有效数只统计已完成，总数不加已完成状态条件",
+      "完成率为有效数除以总数，总数为0保留0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "总数与有效数范围不同、比值计算及零基数均正确。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "有效订单数只统计状态为“已完成”的订单；总订单数查询不加已完成状态条件，因此包含其他状态的订单。订单完成率 = 有效订单数 ÷ 总订单数；当总订单数或有效订单数为0时，该指标保留为0.0，且原始值是比值，不是乘以100后的百分数。【来源：wx_statistics_rules_v1-20261009_s3_c1】\n\n有效订单数对应“已完成”订单的数量，待付款、待接单、已接单、派送中和已取消订单不计入。【来源：wx_statistics_rules_v1-20261009_s1_c1】",
+    "sources": [
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s3_c1",
+        "text": "平均客单价与订单完成率\n当前Workspace统计将有效订单数除以总订单数作为订单完成率，将营业额除以有效订单数作为平均客单价。当总订单数或有效订单数为0时，代码保留这两个指标为0.0，避免除零。\n总订单数查询不加已完成状态条件，查询有效订单数时才加入已完成状态条件。订单完成率原始值是比值，不是已经乘以100的百分数。\n依据：WorkspaceServiceImpl.getBusinessData。"
+      },
+      {
+        "documentId": "wx_statistics_rules",
+        "documentTitle": "万众享营业统计口径说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_statistics_rules_v1-20261009_s1_c1",
+        "text": "营业额与有效订单口径\n当前营业统计以订单状态为已完成的订单金额合计作为营业额，以这些订单的数量作为有效订单数。待付款、待接单、已接单、派送中和已取消订单不计入这两个已完成口径指标。\n金额合计查询返回null时，Service转换为0.0；金额为0.0不能单独证明没有有效订单，应同时查看有效订单数。\n依据：WorkspaceServiceImpl.getBusinessData、ReportServiceImpl.getTurnoverStatistics、OrderMapper.xml.sumByMap、countByMap。"
+      }
+    ],
+    "latency_ms": 1895.98,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q38",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "门店标记1表示什么，应该从哪里读取才能确认当前标记？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "1表示营业中",
+      "实时读取Redis的SHOP_STATUS，不从规则推断当前状态"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确解释1为营业中并要求实时读取SHOP_STATUS。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "门店标记1表示“营业中”（0表示“打烊中”），但这只是状态含义，不能据此认定门店当前实际营业。【来源：wx_shop_rules_v1-20261009_s1_c1】\n\n要确认当前标记，需实时读取Redis键 SHOP_STATUS 的当前值；管理端设置状态时也写入该键，读取时从同一键获取。【来源：wx_shop_rules_v1-20261009_s2_c1】",
+    "sources": [
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s1_c1",
+        "text": "门店营业状态含义\n当前门店状态接口用1表示营业中，用0表示打烊中。这里解释状态含义，不能据此认定门店现在营业或已经打烊。\n依据：admin.ShopController.setStatus、getStatus 中的状态说明。"
+      },
+      {
+        "documentId": "wx_shop_rules",
+        "documentTitle": "万众享门店营业状态实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_shop_rules_v1-20261009_s2_c1",
+        "text": "门店状态存储与读取\n管理端设置门店状态时，将传入状态写入Redis键SHOP_STATUS；读取门店状态时，从同一键获取当前值。\n规则文档仅描述这个存取方式。门店当前状态需要实时读取，不能从规则文本、模型记忆或历史回答恢复。当前接口使用固定键，不声称已实现按多门店分别存储。\n依据：admin.ShopController.setStatus、getStatus。"
+      }
+    ],
+    "latency_ms": 1576.67,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s2_c1"
+    ],
+    "evidence_groups_hit": 2,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": true,
+    "recall_at_2": 1.0,
+    "refused": false
+  },
+  {
+    "id": "Q39",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品状态改为0是什么意思，对包含它的组合商品会如何处理？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "0表示禁用/停售",
+      "停售时把包含该商品的关联组合商品也改为停售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": false,
+    "strict_complete": false,
+    "reason": "漏检商品停售联动章节，混淆直接修改套餐与商品停售流程，错误否认已实现的联动。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "商品状态改为0表示“禁用”（停售）。当前实现中，组合商品的启售停售方法按ID直接更新组合商品状态，自身未检查关联商品是否全部启售，因此不能声称“包含的商品停用后组合商品会自动处理或受保护”已经实现。【来源：wx_product_rules_v1-20261009_s1_c1】【来源：wx_product_rules_v1-20261009_s4_c1】",
+    "sources": [
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s1_c1",
+        "text": "商品启售停售状态\n当前状态常量规定1为启用、0为禁用，商品及组合商品使用这两个值表达启售和停售。\n资料性质为源码实现说明，不能据此推断某一商品现在正在销售，其当前状态需要查询业务数据库。\n依据：StatusConstant.ENABLE、StatusConstant.DISABLE。"
+      },
+      {
+        "documentId": "wx_product_rules",
+        "documentTitle": "万众享商品与组合商品实现说明",
+        "version": "v1-20261009",
+        "chunkId": "wx_product_rules_v1-20261009_s4_c1",
+        "text": "组合商品状态更新与资料范围\n当前组合商品启售停售方法按ID直接更新组合商品状态；该方法自身未检查关联商品是否全部启售，不能声称该保护已经实现。\n本文是2026-10-09源码实现说明，文档编号wx_product_rules，版本v1-20261009，不包含库存扣减、折扣、优惠券及所有删除边界。查询规则不执行启售、停售或删除。\n依据：SetmealServiceImpl.startOrStop。"
+      }
+    ],
+    "latency_ms": 1256.0,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_product_rules_v1-20261009_s1_c1",
+      "wx_product_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": false,
+    "recall_at_2": 0.5,
+    "refused": false
+  },
+  {
+    "id": "Q40",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "接单和开始派送两个方法，当前对原订单状态的校验有什么区别？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s3_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "接单直接按ID更新，没有先查询和校验原状态",
+      "开始派送要求订单存在且为已接单，否则异常"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted.",
+    "correct": false,
+    "strict_complete": false,
+    "reason": "资料中确有接单和派送两条规则，但漏检接单章节后给出资料不足，属于可回答问题误拒答。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1328.04,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s5_c1",
+      "wx_order_rules_v2-20261009_s6_c1"
+    ],
+    "evidence_groups_hit": 1,
+    "evidence_groups_total": 2,
+    "retrieval_hit": true,
+    "retrieval_complete": false,
+    "recall_at_2": 0.5,
+    "refused": true
+  },
+  {
+    "id": "Q41",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "本平台退款承诺在申请后多少小时到账？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料未提供退款到账时限，不能给具体小时数"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的退款到账小时数。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1375.38,
+    "candidate_count": 1,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q42",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "商户每月几号结算，平台收取百分之几的佣金？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料未提供结算日期或佣金比例"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的结算日期及佣金比例。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1122.91,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s3_c1",
+      "wx_statistics_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q43",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "优惠券到期前多少天会自动延期？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有优惠券延期政策"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的优惠券延期规则。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1291.04,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s7_c1",
+      "wx_shop_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q44",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "门店法定节假日统一几点开门、几点打烊？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有节假日营业时段"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的节假日营业时段。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1141.56,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q45",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "配送超过约定时间，平台每分钟赔偿用户多少钱？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有超时配送赔偿标准"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的配送超时赔偿金额。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 460.57,
+    "candidate_count": 0,
+    "retrieved_chunk_ids": [],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q46",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "根据现有规则，订单超过多久未支付会自动取消？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "本次四份规则没有提供未支付超时取消时长，不借常识编造15分钟"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "冻结的四份规则没有未付款超时取消时长，正确拒答而未引用文档外15分钟业务实现。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1008.59,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s7_c1",
+      "wx_shop_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q47",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "平台电子发票最晚应在付款后多少天开具？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有发票开具期限"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "正确拒答未提供的发票期限。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 399.07,
+    "candidate_count": 0,
+    "retrieved_chunk_ids": [],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q48",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "今天实际营业额是多少元，一共完成了多少笔订单？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "规则资料不含实时数字，该独立接口没有统计工具结果"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "独立规则接口无实时统计结果，正确拒答今日营业额和订单数。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1293.72,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_statistics_rules_v1-20261009_s1_c1",
+      "wx_statistics_rules_v1-20261009_s4_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q49",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "万众享门店现在到底是在营业还是打烊？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "规则不含实时状态，不能据状态说明断言当前营业或打烊"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "无Redis实时读取事实，正确拒答当前营业状态。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1384.57,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_shop_rules_v1-20261009_s1_c1",
+      "wx_shop_rules_v1-20261009_s3_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  },
+  {
+    "id": "Q50",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "订单编号202610210001现在已经派送了吗？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "没有这笔订单实时数据，不能声称已查询或确定状态"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted.",
+    "correct": true,
+    "strict_complete": true,
+    "reason": "无指定订单实时数据，正确拒答而未声称已查询。",
+    "http_status": 200,
+    "business_code": 1,
+    "answer": "当前检索资料不足以回答该问题。",
+    "sources": [],
+    "latency_ms": 1831.12,
+    "candidate_count": 2,
+    "retrieved_chunk_ids": [
+      "wx_order_rules_v2-20261009_s1_c1",
+      "wx_order_rules_v2-20261009_s5_c1"
+    ],
+    "evidence_groups_hit": 0,
+    "evidence_groups_total": 0,
+    "retrieval_hit": null,
+    "retrieval_complete": null,
+    "recall_at_2": null,
+    "refused": true
+  }
+]

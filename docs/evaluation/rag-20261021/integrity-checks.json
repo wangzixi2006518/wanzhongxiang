@@ -1,0 +1,15 @@
+{
+  "dataset_hash_unchanged": true,
+  "raw_hash_unchanged": true,
+  "question_count": 50,
+  "response_count": 50,
+  "unique_response_ids": 50,
+  "question_ids_match": true,
+  "all_http_200": true,
+  "all_business_code_1": true,
+  "citation_edges": 52,
+  "all_returned_sources_match_snapshot": true,
+  "all_returned_citations_in_independent_replay": true,
+  "corpus_unchanged_after_run": true,
+  "catalog_unchanged_after_run": true
+}

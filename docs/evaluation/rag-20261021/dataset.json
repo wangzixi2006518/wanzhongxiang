@@ -1,0 +1,778 @@
+[
+  {
+    "id": "Q01",
+    "category": "direct",
+    "answerable": true,
+    "question": "订单状态1到6分别表示什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1待付款、2待接单、3已接单、4派送中、5已完成、6已取消，映射全部正确"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q02",
+    "category": "direct",
+    "answerable": true,
+    "question": "支付状态0、1、2分别是什么？它和订单状态是同一个字段吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "0未支付、1已支付、2退款",
+      "支付状态和订单状态是不同字段"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q03",
+    "category": "direct",
+    "answerable": true,
+    "question": "用户可以取消哪些状态的订单？取消成功后记录什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "待付款或待接单允许，其他四个合法状态不允许",
+      "状态改为已取消并记录用户取消原因及取消时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q04",
+    "category": "direct",
+    "answerable": true,
+    "question": "用户取消待接单订单时，代码是否能证明支付渠道已经退回资金？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "将支付状态设置为退款",
+      "外部退款调用被注释，不能证明实际到账"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q05",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前管理端接单方法有没有先查询订单并校验原状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "没有先查询并校验原状态",
+      "按传入订单ID直接更新为已接单"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q06",
+    "category": "direct",
+    "answerable": true,
+    "question": "管理端拒单需要满足什么条件，成功后更新哪些信息？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且为待接单",
+      "改已取消并记录拒单原因、取消时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q07",
+    "category": "direct",
+    "answerable": true,
+    "question": "开始派送要求订单是什么状态，成功后变成什么状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且已接单",
+      "从已接单变为派送中"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q08",
+    "category": "direct",
+    "answerable": true,
+    "question": "完成订单需要满足什么条件，会记录什么时间？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单存在且派送中",
+      "改已完成并记录实际送达时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q09",
+    "category": "direct",
+    "answerable": true,
+    "question": "门店状态1和0分别表示什么？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1营业中、0打烊中"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q10",
+    "category": "direct",
+    "answerable": true,
+    "question": "门店营业状态存放在哪里，管理端如何读取？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "Redis固定键SHOP_STATUS",
+      "设置写入该键，读取从同一键获取"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q11",
+    "category": "direct",
+    "answerable": true,
+    "question": "要判断门店现在是否营业，可以直接用规则文本中的状态说明吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "不可以",
+      "需要实时读取Redis中的当前状态，不能依赖规则或历史回答"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q12",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品和组合商品的启售、停售分别用哪个状态值表示？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "1启售/启用，0停售/禁用"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q13",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品批量删除前有哪些业务限制，校验通过后删除哪些数据？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "启售中拒绝删除、存在组合商品关联拒绝删除",
+      "通过后删除商品及规格数据"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q14",
+    "category": "direct",
+    "answerable": true,
+    "question": "停售一个商品会对包含它的组合商品产生什么影响？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "关联组合商品也改为停售",
+      "该状态联动方法使用Spring事务"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q15",
+    "category": "direct",
+    "answerable": true,
+    "question": "商品重新启售后，会自动恢复关联组合商品的启售状态吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会，当前没有实现这种对称自动恢复"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q16",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前组合商品启售方法是否检查关联商品全部启售？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "按ID直接更新组合商品状态",
+      "没有检查关联商品是否全部启售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q17",
+    "category": "direct",
+    "answerable": true,
+    "question": "当前营业统计中的营业额和有效订单数是什么口径？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "已完成订单金额合计作为营业额",
+      "已完成订单数量作为有效订单数，其他状态不计入"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q18",
+    "category": "direct",
+    "answerable": true,
+    "question": "这份统计实现说明使用哪个时间字段，begin和end边界如何比较？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "使用order_time而非delivery_time或支付时间",
+      "order_time > begin 且 order_time < end，两端严格比较"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q19",
+    "category": "direct",
+    "answerable": true,
+    "question": "平均客单价如何计算，有效订单数为0时是多少？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "营业额除以有效订单数",
+      "有效订单数为0时保留0.0避免除零"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q20",
+    "category": "direct",
+    "answerable": true,
+    "question": "订单完成率如何计算，返回值是不是已经乘以100的百分数？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "有效订单数除以总订单数，总数不限制已完成状态",
+      "返回比值而非已乘100；总订单数为0时为0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q21",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "订单已经被商家接下了，买家还能走用户取消接口撤销吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "已接单状态3不能用户取消",
+      "用户取消仅支持待付款或待接单"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q22",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "骑手都在送货了，管理端还能把这笔单当作拒单来处理吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能",
+      "拒单要求待接单，派送中不满足"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q23",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "还没接单就点开始配送，当前代码会放行吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会",
+      "开始派送要求订单存在且已接单，待接单不满足"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q24",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "订单刚接下来还没进入配送，可以直接点完成吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "不可以",
+      "完成要求派送中，不满足时抛订单状态错误"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q25",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "商品还挂在售卖页面上，后台能直接批量删掉吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "启售状态拒绝删除",
+      "需先满足非启售等删除检查"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q26",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "一个已经下架的单品仍被套餐引用，能直接删除这个单品吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能",
+      "存在组合商品关联时拒绝删除，下架不代表检查全部通过"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q27",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "顾客付过钱但订单还没送完，这笔钱会算进当前已完成口径的营业额吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "不计入",
+      "营业额口径要求订单状态已完成，付款不等于完成"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q28",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "查出来营业额是零，就能断定一个有效订单都没有吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能仅凭金额0判断",
+      "应同时查看有效订单数"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q29",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "今天没有任何已完成订单时，工作台的客单价会算崩吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不会除零",
+      "有效订单数为0时客单价保留0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q30",
+    "category": "paraphrase",
+    "answerable": true,
+    "question": "Redis里没有保存门店营业标记，接口一定会当作打烊返回0吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "不能保证",
+      "资料没有保证缺键一定返回0，不能推断默认行为"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q31",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "用户取消和管理端拒单在允许的原订单状态上有什么不同？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "用户取消允许待付款和待接单",
+      "管理端拒单只允许待接单且要求订单存在"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q32",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "订单从已接单到完成，开始派送和完成两个方法各自要求什么原状态？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s6_c1"
+      ]
+    ],
+    "expected_points": [
+      "开始派送要求已接单并更新为派送中",
+      "完成要求派送中并更新已完成、记录实际送达时间"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q33",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "待接单订单被用户取消后，订单状态和支付状态分别是什么？能证明退款到账吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s1_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "订单状态6已取消、支付状态2退款",
+      "退款调用被注释，不能证明渠道到账"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q34",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品停售与商品删除对关联组合商品分别如何处理？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s2_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "停售会联动关联组合商品停售",
+      "删除遇到组合商品关联会拒绝，不是连带删除组合商品"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q35",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品停售后再启售会自动恢复套餐吗？直接启售套餐会校验全部关联商品吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s4_c1"
+      ]
+    ],
+    "expected_points": [
+      "重新启售商品不会自动恢复关联组合商品",
+      "直接启售组合商品方法没有校验关联商品是否全部启售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q36",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "按这份统计实现说明，营业额筛选使用什么订单状态和时间字段，时间边界包含端点吗？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_statistics_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "筛选已完成订单并合计金额",
+      "时间字段order_time，begin/end两端严格比较、不包含端点"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q37",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "有效订单数和总订单数的筛选条件有何区别，完成率如何得到？",
+    "gold_evidence_groups": [
+      [
+        "wx_statistics_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_statistics_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "有效数只统计已完成，总数不加已完成状态条件",
+      "完成率为有效数除以总数，总数为0保留0.0"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q38",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "门店标记1表示什么，应该从哪里读取才能确认当前标记？",
+    "gold_evidence_groups": [
+      [
+        "wx_shop_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_shop_rules_v1-20261009_s2_c1"
+      ]
+    ],
+    "expected_points": [
+      "1表示营业中",
+      "实时读取Redis的SHOP_STATUS，不从规则推断当前状态"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q39",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "商品状态改为0是什么意思，对包含它的组合商品会如何处理？",
+    "gold_evidence_groups": [
+      [
+        "wx_product_rules_v1-20261009_s1_c1"
+      ],
+      [
+        "wx_product_rules_v1-20261009_s3_c1"
+      ]
+    ],
+    "expected_points": [
+      "0表示禁用/停售",
+      "停售时把包含该商品的关联组合商品也改为停售"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q40",
+    "category": "multi_evidence",
+    "answerable": true,
+    "question": "接单和开始派送两个方法，当前对原订单状态的校验有什么区别？",
+    "gold_evidence_groups": [
+      [
+        "wx_order_rules_v2-20261009_s3_c1"
+      ],
+      [
+        "wx_order_rules_v2-20261009_s5_c1"
+      ]
+    ],
+    "expected_points": [
+      "接单直接按ID更新，没有先查询和校验原状态",
+      "开始派送要求订单存在且为已接单，否则异常"
+    ],
+    "grading_rule": "All required points must be conveyed without contradicting the frozen rules or inventing unsupported business conditions; paraphrases accepted."
+  },
+  {
+    "id": "Q41",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "本平台退款承诺在申请后多少小时到账？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料未提供退款到账时限，不能给具体小时数"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q42",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "商户每月几号结算，平台收取百分之几的佣金？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料未提供结算日期或佣金比例"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q43",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "优惠券到期前多少天会自动延期？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有优惠券延期政策"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q44",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "门店法定节假日统一几点开门、几点打烊？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有节假日营业时段"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q45",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "配送超过约定时间，平台每分钟赔偿用户多少钱？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有超时配送赔偿标准"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q46",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "根据现有规则，订单超过多久未支付会自动取消？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "本次四份规则没有提供未支付超时取消时长，不借常识编造15分钟"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q47",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "平台电子发票最晚应在付款后多少天开具？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "资料没有发票开具期限"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q48",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "今天实际营业额是多少元，一共完成了多少笔订单？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "规则资料不含实时数字，该独立接口没有统计工具结果"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q49",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "万众享门店现在到底是在营业还是打烊？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "规则不含实时状态，不能据状态说明断言当前营业或打烊"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  },
+  {
+    "id": "Q50",
+    "category": "unanswerable",
+    "answerable": false,
+    "question": "订单编号202610210001现在已经派送了吗？",
+    "gold_evidence_groups": [],
+    "expected_points": [
+      "没有这笔订单实时数据，不能声称已查询或确定状态"
+    ],
+    "grading_rule": "Must explicitly decline to confirm the requested fact/policy due to insufficient provided material; no invented figures, deadlines or claims of execution. Exact standard refusal is accepted."
+  }
+]
